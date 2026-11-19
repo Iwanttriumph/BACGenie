@@ -1,0 +1,448 @@
+{
+  "type": "object",
+  "properties": {
+    "cve_id": {
+      "type": "string",
+      "pattern": "^CVE-\\d{4}-\\d{4,}$"
+    },
+    "victim_requests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "method": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "handler": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "endpoint": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "params": {
+            "type": "object",
+            "required": [
+              "path",
+              "query"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "query": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              }
+            }
+          },
+          "headers": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "value"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            ]
+          },
+          "body": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "fields": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "format",
+                  "fields"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "response": {
+            "type": "object",
+            "properties": {
+              "status_code": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 100,
+                "maximum": 599
+              },
+              "headers": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "value"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                ]
+              },
+              "body": {}
+            },
+            "required": [
+              "status_code",
+              "headers",
+              "body"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "method",
+          "handler",
+          "endpoint",
+          "params",
+          "headers",
+          "body",
+          "response"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "attacker_requests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "method": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "handler": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "endpoint": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "params": {
+            "type": "object",
+            "required": [
+              "path",
+              "query"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "query": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              }
+            }
+          },
+          "headers": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "value"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            ]
+          },
+          "body": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "fields": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "format",
+                  "fields"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "response": {
+            "type": "object",
+            "properties": {
+              "status_code": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 100,
+                "maximum": 599
+              },
+              "headers": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "value"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                ]
+              },
+              "body": {}
+            },
+            "required": [
+              "status_code",
+              "headers",
+              "body"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "method",
+          "handler",
+          "endpoint",
+          "params",
+          "headers",
+          "body",
+          "response"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "interaction": {
+      "type": "object",
+      "properties": {
+        "victim_request_required": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "relation": {
+          "enum": [
+            "before",
+            "concurrent",
+            "after",
+            "unknown",
+            null
+          ]
+        },
+        "condition": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "victim_request_required",
+        "relation",
+        "condition"
+      ],
+      "additionalProperties": false
+    },
+    "classification": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "TP1",
+          "TP2",
+          "TP3",
+          "TP4",
+          "TP5"
+        ]
+      }
+    },
+    "trigger_points": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "request_id",
+          "locations",
+          "field",
+          "action",
+          "before",
+          "after"
+        ],
+        "properties": {
+          "request_id": {
+            "type": "string"
+          },
+          "locations": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "api",
+                "url",
+                "body",
+                "header"
+              ]
+            }
+          },
+          "field": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "action": {
+            "enum": [
+              "invoke",
+              "add",
+              "replace",
+              "remove",
+              "modify",
+              "unknown"
+            ]
+          },
+          "before": {},
+          "after": {}
+        }
+      }
+    }
+  },
+  "required": [
+    "cve_id",
+    "victim_requests",
+    "attacker_requests",
+    "trigger_points",
+    "interaction",
+    "classification"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

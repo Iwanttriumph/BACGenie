@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+experiments/
+/test_agent.py
+/trigger pattern输出/
+results/**/llm_response.json
