@@ -3,7 +3,11 @@ __pycache__/
 *.py[cod]
 .env
 .env.*
+/project/
 experiments/
-/test_agent.py
+/tests/
 /trigger pattern输出/
 results/**/llm_response.json
+results - v2/**/llm_response.json
+
+**/oracle_llm_response.json
