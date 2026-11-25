@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 .env
 .env.*
+.opencode-runtime/
+runs/**/.private_tmp/
+runs/**/private_*.json
 /project/
 experiments/
 /tests/

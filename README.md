@@ -1,4 +1,38 @@
-# Trigger Pattern Agent
+# Kaiti v2 — 双盲可信越权漏洞动态复现系统 (OpenCode Primary/Worker + Double-Blind Gate)
+
+## Kaiti v2 架构与运行方式（`4090-1` 实验环境）
+
+`Kaiti v2` 基于 OpenCode 原生 `Primary + Worker` 双层智能体、模块化领域技能（Skills）与确定性双盲重放门禁（`harness/gate.py`）实现越权漏洞（Broken Access Control）的可信动态复现：
+
+- **两类正交智能体（`.opencode/agents/`）**：
+  - `kaiti-planner`（`mode: primary`，怀疑论主审架构师）：权限级锁死仅能读写战略账本 `00_ledger.md` / 终审报告 `reproduction_report.md`、调度 `kaiti/worker`、调用唯一受控门禁 `python3 harness/gate.py`。
+  - `kaiti/worker`（`mode: subagent`，最小知情面现场执行员）：叶子执行节点（禁止再派子智能体，禁止修改 `harness/`、`verdict.json` 与 `evidence_bundle.json`）；每次拉起独立子会话，按信息防火墙分别承担**源码定位与契约起草**、**隔离靶场与 Solution 2 前置准备**、**Clean-Room 纯盲态攻击开发**。
+- **三个领域技能（`.opencode/skills/`）**：
+  - `bac-trigger-and-oracle`：源码锚定的 `TP1`–`TP5` 分类、`Solution 1`（`O1`/`O2`/`O3` × `READ`/`CREATE`/`UPDATE`/`DELETE`）契约与 OWASP 正负对照规范。
+  - `bac-state-prep`：`Solution 2` 反向拆解依赖、`复用 > 应用 API > 直接 DB 初始化(必回读)` 策略、`4090-1` 容器/虚机隔离规范与三件套 CLI 契约。
+  - `bac-convincing-report`：基于实测原始报文的六段式复现证明报告与六项假阳性排除核对表。
+- **确定性双盲重放门禁（`harness/gate.py`）**：
+  - 静态 AST 反作弊检查（拦截 `exploit.py` 导入容器/Shell/数据库模块）；
+  - 每次运行动态生成随机信标（`canary` / `old_value` / `new_value` / `create_tag`），扫描拦截 `prep.py` 向公开输入泄漏秘密；
+  - 在运行盲态 `exploit.py` 期间将 `private_verifier.json` 物理从磁盘抹除仅存于内存，杜绝偷读管理凭据；
+  - 结合同域哨兵（`sentinel_id`）与独立观察者回读，签发 `PROVEN` / `NOT_OBSERVED` / `INCONCLUSIVE` 三值裁决单 `verdict.json` 与全链路原始证据包 `evidence_bundle.json`。
+
+### 在 `4090-1` 上一键运行与自检
+
+```bash
+# 1. 运行门禁单元测试
+python3 -m unittest harness/test_gate.py -v
+
+# 2. 启动端到端越权动态复现（自动使用隔离 .opencode-runtime，避开多用户端口与 DB 锁冲突）
+./kaiti_run.sh CVE-2025-27507 yeowl/glm-5.3
+
+# 3. 单独重跑指定案例的双盲动态信标终审复核
+python3 harness/gate.py run runs/CVE-2025-27507
+```
+
+---
+
+## Legacy v1 说明：Trigger Pattern Agent
 
 ## Oracle 设计与 src 目录
 
