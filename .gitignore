@@ -5,7 +5,6 @@ __pycache__/
 .env.*
 /project/
 experiments/
-/tests/
 /trigger pattern输出/
 results/**/llm_response.json
 results - v2/**/llm_response.json

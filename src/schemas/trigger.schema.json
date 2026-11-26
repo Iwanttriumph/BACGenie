@@ -374,6 +374,7 @@
     "classification": {
       "type": "array",
       "uniqueItems": true,
+      "description": "Static classification result: at most the single highest-priority candidate (TP5 > TP4 > TP3 > TP2 > TP1); empty when no candidate exists.",
       "items": {
         "enum": [
           "TP1",
@@ -382,7 +383,8 @@
           "TP4",
           "TP5"
         ]
-      }
+      },
+      "maxItems": 1
     },
     "trigger_points": {
       "type": "array",

@@ -18,9 +18,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--input", type=Path)
+    group.add_argument("--input-dir", type=Path,
+                       help="批量读取目录下的 CVE-*.json 平面输入")
     group.add_argument("--cve")
     parser.add_argument("--results-dir", type=Path, default=ROOT / "results",
-                        help="输入发现与输出保存目录（默认 results）")
+                        help="输出保存目录；未指定 --input/--input-dir 时也用于发现已有输入（默认 results）")
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--model", default=MODEL)
     parser.add_argument("--stage", choices=["tp", "oracle", "all"], default="tp")
@@ -28,9 +30,19 @@ def main():
     results = args.results_dir
     if args.cve and not re.fullmatch(r"CVE-\d{4}-\d{4,}", args.cve):
         parser.error("--cve 必须为合法 CVE ID")
-    paths = [args.input] if args.input else ([results / args.cve / (args.cve + ".json")] if args.cve
-            else sorted(p for p in results.glob("CVE-*/*.json") if p.stem == p.parent.name))
-    counts = {"success": 0, "failed": 0, "skipped": 0}
+    if args.input_dir and not args.input_dir.is_dir():
+        parser.error("--input-dir 必须是已存在的目录")
+    if args.input:
+        paths = [args.input]
+    elif args.input_dir:
+        paths = sorted(args.input_dir.glob("CVE-*.json"))
+        if not paths:
+            parser.error("--input-dir 中未找到 CVE-*.json")
+    elif args.cve:
+        paths = [results / args.cve / (args.cve + ".json")]
+    else:
+        paths = sorted(p for p in results.glob("CVE-*/*.json") if p.stem == p.parent.name)
+    counts = {"success": 0, "ready": 0, "incomplete": 0, "failed": 0, "skipped": 0}
     for path in paths:
         try:
             factory = lambda: Client(get_key(), model=args.model)
