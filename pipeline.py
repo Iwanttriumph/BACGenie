@@ -64,6 +64,12 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--reuse-dynamic", action="store_true", help="Reuse cached dynamic_run.json in verify stage")
     ap.add_argument("--skip-dynamic", action="store_true", help="Run verify static/Agent audit without starting containers")
     ap.add_argument("--overwrite", action="store_true", help="Overwrite existing cached stage outputs")
+    ap.add_argument(
+        "--verifier-runner",
+        choices=["python", "opencode"],
+        default="python",
+        help="Execution backend for verify stage: standalone 'python' (default, cross-platform) or native 'opencode' agent loading bac-repro-verifier skill",
+    )
     ap.add_argument("--model", type=str, default="", help="Override LLM model name")
     ap.add_argument("--base-url", type=str, default="", help="Override OpenAI-compatible API base URL")
     ap.add_argument("--sample-rate", type=float, default=0.30, help="Stratified spot-check sample rate for True verdicts")
@@ -123,6 +129,19 @@ def run_pipeline(argv: Optional[List[str]] = None) -> int:
             return 0
 
     if args.stage in ("verify", "post-reproduce", "all"):
+        if args.verifier_runner == "opencode":
+            opencode_bin = os.environ.get("OPENCODE_BIN", "opencode")
+            target_desc = ", ".join(args.cve) if args.cve else "experiment/benchmark_23.json 中的全部 23 条任务"
+            prompt = (
+                f"请加载技能 bac-repro-verifier，对 {target_desc} 的复现交付物执行双容器物理隔离 Flag-Gate 核验与五维源码审计，"
+                f"输出 verdict_report.json 并更新 {args.verifier_results_dir}/SUMMARY.md。"
+            )
+            oc_cmd = [opencode_bin, "run", "--standalone", "--auto", "--agent", "bacgenie-verifier"]
+            if args.model:
+                oc_cmd.extend(["-m", args.model])
+            oc_cmd.append(prompt)
+            return _run_subcmd(oc_cmd)
+
         from verifier.config import DEFAULT_BASE_URL, DEFAULT_MODEL, DEFAULT_REMOTE_DELIVERABLES
         from verifier.main import run_cli
 

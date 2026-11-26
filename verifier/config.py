@@ -4,8 +4,11 @@ from pathlib import Path
 
 SRC_DIR = Path(__file__).resolve().parent
 ROOT_DIR = SRC_DIR.parent
-PROMPTS_DIR = SRC_DIR / "prompts"
-SCHEMAS_DIR = SRC_DIR / "schemas"
+
+# Single Source of Truth: unified `.opencode/skills/bac-repro-verifier` skill bundle
+SKILL_DIR = ROOT_DIR / ".opencode" / "skills" / "bac-repro-verifier"
+SKILL_MD_PATH = SKILL_DIR / "SKILL.md"
+SKILL_REFS_DIR = SKILL_DIR / "references"
 
 # Default LLM configuration
 DEFAULT_MODEL = "deepseek-v4.1-flash"
@@ -29,4 +32,4 @@ DEFAULT_SAMPLE_RATE = 0.30
 MIN_TRUE_SAMPLES = 3
 DEFAULT_SAMPLE_SEED = 20261126
 
-VERIFIER_VERSION = "1.0.0"
+VERIFIER_VERSION = "1.1.0"

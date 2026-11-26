@@ -26,21 +26,22 @@ BACGenie/
 ├── pipeline.py                  # 三阶段统一编排入口（支持 all / post-reproduce / reproduce / bundle / verify）
 ├── verify.py                    # 后置独立自动化 Verifier 快捷入口
 ├── bacgenie_run.sh              # 单题动态复现启动脚本（默认模型 yeowl/deepseek-v4.1-flash，支持 BACGENIE_AUTO_VERIFY=1）
-├── .opencode/                   # bacgenie-planner 与 bacgenie/worker 智能体配置及三大领域技能
+├── .opencode/                   # 智能体配置及四大领域技能（复现 + 独立核验统一封装）
 │   ├── agents/
 │   │   ├── bacgenie-planner.md  # 主审架构师（统筹 TP/Oracle 契约审定、分信封派单与门禁调用）
+│   │   ├── bacgenie-verifier.md # 独立核验审计官（加载 bac-repro-verifier 技能执行后置双容器+源码核验）
 │   │   └── bacgenie/worker.md   # 最小知情面执行员（源码契约、靶场准备、盲态客户端三态物理隔离）
 │   └── skills/
 │       ├── bac-trigger-and-oracle/ # TP1–TP5 识别与 O1/O2/O3 × CRUD Oracle 契约规范
 │       ├── bac-state-prep/         # Solution 2 状态准备与正负对照规范
-│       └── bac-convincing-report/  # 六段式可信复现证明报告规范
+│       ├── bac-convincing-report/  # 六段式可信复现证明报告规范
+│       └── bac-repro-verifier/     # 后置双容器 Flag-Gate 核验规范、Schema、提示词与沙箱脚本
 ├── harness/                     # 复现阶段内部双盲重放门禁 gate.py 及测试 test_gate.py
 ├── experiment/                  # 23 题基准配置、批量调度 run_batch.py、交付包构建 build_harbor_bundle.py
-├── verifier/                    # 后置独立双容器物理隔离 Flag Gate 沙箱 + 源码只读对齐 Agent 审计器
+├── verifier/                    # bac-repro-verifier 技能的跨平台 Python 运行引擎与报表模块
 │   ├── sandbox/                 # 自动分配无冲突子网的双网隔离 Docker 引擎（兼容本地 Docker 与 --ssh 远端执行）
-│   ├── agents/                  # 双标准裁决器（标准1：动态效果 Flag；标准2：低权限完整链路、拒绝有权限角色混入）
-│   ├── toolbox/                 # 模型客户端与受限于 repo_path 的只读源码检索工具
-│   ├── prompts/ & schemas/      # 四阶段 Oracle 抽取提示词与三值裁决 JSON Schema
+│   ├── agents/                  # 绑定 .opencode/skills/bac-repro-verifier 规范的双标准裁决器
+│   ├── toolbox/                 # 模型客户端与受限只读源码检索工具
 │   └── reporting/               # True 分层随机抽样、unknown 100% 必审清单与 SUMMARY.md 生成器
 └── tests/                       # 自动化 Verifier 与流水线单元测试
 ```

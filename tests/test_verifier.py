@@ -328,6 +328,16 @@ class TestUnifiedPipelineCLI(unittest.TestCase):
         self.assertEqual(len(cat), 23)
         self.assertIn("CVE-2024-10273", cat)
 
+    def test_skill_bundle_integrity(self) -> None:
+        from verifier.config import ROOT_DIR, SKILL_DIR, SKILL_MD_PATH, SKILL_REFS_DIR
+        self.assertTrue(SKILL_MD_PATH.is_file())
+        self.assertIn("name: bac-repro-verifier", SKILL_MD_PATH.read_text(encoding="utf-8"))
+        self.assertTrue((SKILL_REFS_DIR / "auditor_prompt.md").is_file())
+        self.assertTrue((SKILL_REFS_DIR / "repair_prompt.md").is_file())
+        self.assertTrue((SKILL_REFS_DIR / "verdict.schema.json").is_file())
+        self.assertTrue((SKILL_DIR / "scripts" / "run_sandbox.py").is_file())
+        self.assertTrue((ROOT_DIR / ".opencode" / "agents" / "bacgenie-verifier.md").is_file())
+
 
 if __name__ == "__main__":
     unittest.main()

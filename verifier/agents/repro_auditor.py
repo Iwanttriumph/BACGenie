@@ -6,13 +6,16 @@ from typing import Any, Dict, List, Optional
 
 import jsonschema
 
-from verifier.config import MAX_TOOL_ROUNDS, PROMPTS_DIR, SCHEMAS_DIR
+from verifier.config import MAX_TOOL_ROUNDS, SKILL_MD_PATH, SKILL_REFS_DIR
 from verifier.toolbox.llm_client import parse_json_response, run_validated_json_stage
 from verifier.toolbox.source_tools import ReadOnlySourceWorkspace
 
-VERDICT_SCHEMA = json.loads((SCHEMAS_DIR / "verdict.schema.json").read_text(encoding="utf-8"))
-SYSTEM_PROMPT = (PROMPTS_DIR / "auditor_system.md").read_text(encoding="utf-8")
-REPAIR_TEMPLATE = (PROMPTS_DIR / "auditor_repair.md").read_text(encoding="utf-8")
+VERDICT_SCHEMA = json.loads((SKILL_REFS_DIR / "verdict.schema.json").read_text(encoding="utf-8"))
+SYSTEM_PROMPT = (
+    (SKILL_MD_PATH.read_text(encoding="utf-8") + "\n\n---\n\n" if SKILL_MD_PATH.exists() else "")
+    + (SKILL_REFS_DIR / "auditor_prompt.md").read_text(encoding="utf-8")
+)
+REPAIR_TEMPLATE = (SKILL_REFS_DIR / "repair_prompt.md").read_text(encoding="utf-8")
 
 
 def _default_oracle_table(note: str) -> List[Dict[str, str]]:
