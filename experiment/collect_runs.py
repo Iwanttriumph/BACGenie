@@ -25,7 +25,7 @@ def metrics(rt, cve):
         con.row_factory = sqlite3.Row
         root = con.execute(
             "select * from session_v2 where title = ? order by time_created desc limit 1",
-            (f"Kaiti-{cve}",),
+            (f"BACGenie-{cve}",),
         ).fetchone()
         if not root:
             return out

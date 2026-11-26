@@ -13,9 +13,9 @@ description: Solution 2 越权漏洞触发前置状态高效准备规范、4090-
 
 1. **命名空间与端口隔离**：
    - 优先使用 **Docker / Docker Compose** 在 `runs/<CVE-ID>/env/` 下编排目标服务及数据库（启动快、易重置）。
-   - 强制设置唯一项目名：`COMPOSE_PROJECT_NAME=kaiti_<cve_lowercase>`，所有容器名带 `kaiti-` 前缀。
+   - 强制设置唯一项目名：`COMPOSE_PROJECT_NAME=bacgenie_<cve_lowercase>`，所有容器名带 `bacgenie-` 前缀。
    - **严禁使用 `--network host` 或绑定 `0.0.0.0:常用端口`**（`4090-1` 上有其他同学的 `range-*` 靶场及常驻服务）！所有暴露给宿主机的端口一律绑定回环随机端口或探测确认空闲的高位端口：`127.0.0.1:<free_port>:<container_port>`。
-   - **严禁触碰、重启或清理任何非 `kaiti_` 前缀的容器、镜像、进程或宿主机全局包**。
+   - **严禁触碰、重启或清理任何非 `bacgenie_` 前缀的容器、镜像、进程或宿主机全局包**。
 2. **重型环境回退**：仅当漏洞强依赖完整 Linux systemd / 内核特性无法容器化时，才使用 `cve-genie/vm_library` 的 QEMU overlay 虚机（绑定独立空闲本地端口）。
 
 ---
@@ -44,7 +44,7 @@ description: Solution 2 越权漏洞触发前置状态高效准备规范、4090-
 python3 prep.py --nonce-in <nonce.json> --public-out <public.json> --private-out <private.json>
 ```
 - 输入 `<nonce.json>` 由 `gate.py` 生成，格式为：
-  `{"run_id": "...", "canary": "kaiti_canary_...", "old_value": "kaiti_old_...", "new_value": "kaiti_new_...", "create_tag": "kaiti_create_..."}`
+  `{"run_id": "...", "canary": "bacgenie_canary_...", "old_value": "bacgenie_old_...", "new_value": "bacgenie_new_...", "create_tag": "bacgenie_create_..."}`
 - **双信封物理切分输出（`gate.py` 会做秘密泄漏扫描！）**：
   - `<public.json>`（唯一允许给盲态 `exploit.py` 看的文件）：
     - **只允许包含**：`base_url`、`attacker_auth`（低权限 `A` 的 Token/Cookie；匿名漏洞则为 `{}`）、目标公开引用 ID（如 `target_id`、`attacker_scope_id`、`target_scope_id`），以及：

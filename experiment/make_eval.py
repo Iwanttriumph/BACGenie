@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Build eval.xlsx (8 experiment tables + evidence/raw-data sheets) from Kaiti v2 runs.
+"""Build eval.xlsx (8 experiment tables + evidence/raw-data sheets) from BACGenie runs.
 
 Fixes and guarantees:
 1. Strict mathematical separation of 22-CVE fair subset (excl. CVE-2024-9095) vs 23-CVE full set.
 2. Full 3-round columns in Table 1 & Table 2 matching 实验表设计.md; unexecuted items labeled '未执行' (GRAY), never conflated with method failure ('❌').
-3. CVEGenie remarks column restored in Table 3; Table 4 presents both CVEGenie (same-model PDF, primary) and CVEGenie (design-doc record, reference), plus Kaiti v2 22-CVE and 23-CVE columns.
+3. CVEGenie remarks column restored in Table 3; Table 4 presents both CVEGenie (same-model PDF, primary) and CVEGenie (design-doc record, reference), plus BACGenie 22-CVE and 23-CVE columns.
 4. Table 5 & Table 6 accurately record that results-v2 inputs had advisories=[] ('无安全公告/PoC：CVE描述+官方补丁+源码'), while unexecuted ablation columns remain '未单独执行'.
-5. Table 8 reports both full-group rate (ok/total) and executed-group rate (ok/executed), plus Kaiti taxonomy breakdown (TP / Oracle / Effect).
+5. Table 8 reports both full-group rate (ok/total) and executed-group rate (ok/executed), plus BACGenie taxonomy breakdown (TP / Oracle / Effect).
 6. Evidence & per-CVE sheets dynamically read runs/<CVE>/evidence_bundle.json + 01_tp.json + 02_oracle_contract.json (zero wrong hardcoded mechanisms or blank UPDATE templates).
 """
 import json
@@ -67,8 +67,8 @@ ACCURATE_MECH = {
     "CVE-2024-9000":  ("TP1 / O1 / CREATE", "POST /v1/checklists 缺失 checkAccess('checklists','create')，只读 viewer 越权创建 checklist 并复用合法 slug 造成配置混淆"),
     "CVE-2024-9095":  ("TP1 / O1 / DELETE", "POST /v1/data-warehouse/bigquery 缺失 owner 权限校验，普通 member 触发高危 DDL 删除 PostgreSQL 角色 lunary_bigquery_connector 并创建逻辑复制发布"),
     "CVE-2025-27399": ("TP1 / O1 / READ", "Mastodon GET /api/v1/instance/domain_blocks 仅检查登录而未校验 approved 审批状态，未获批挂起用户越权读取实例域名封禁原因"),
-    "CVE-2025-27507": ("未执行（环境引导受限）", "ZITADEL v2.63.0-rc.1：容器健康检查已就绪，但单夜窗口内首实例 OIDC/PAT 无头初始化链路未打通，未启动 Kaiti 会话"),
-    "CVE-2024-52584": ("未执行（构建窗口受限）", "Autolab v3.0.1：老版本 Ruby/Rails 多组件靶场构建耗时较长，单夜窗口内未启动 Kaiti 会话"),
+    "CVE-2025-27507": ("未执行（环境引导受限）", "ZITADEL v2.63.0-rc.1：容器健康检查已就绪，但单夜窗口内首实例 OIDC/PAT 无头初始化链路未打通，未启动 BACGenie 会话"),
+    "CVE-2024-52584": ("未执行（构建窗口受限）", "Autolab v3.0.1：老版本 Ruby/Rails 多组件靶场构建耗时较长，单夜窗口内未启动 BACGenie 会话"),
 }
 
 
@@ -227,7 +227,7 @@ def widths(ws, spec):
 def format_evidence_row(cve, rep):
     """Build accurate (target_str, before_str, after_str, one_liner) from live evidence_bundle.json."""
     if not rep or not attempted(rep):
-        return ("—", "—", "—", "未执行（单夜窗口内未及完成多服务靶场引导，未启动 Kaiti 会话）")
+        return ("—", "—", "—", "未执行（单夜窗口内未及完成多服务靶场引导，未启动 BACGenie 会话）")
     if rep.get("verdict") != "PROVEN":
         return ("—", "—", "—", f"本轮未证明越权效果：{(rep.get('reason') or '')[:140]}")
 
@@ -359,7 +359,7 @@ def summarize_tiers(rows):
 def build():
     wb = Workbook()
 
-    # Pre-compute 23-CVE and 22-CVE stats for Kaiti v2
+    # Pre-compute 23-CVE and 22-CVE stats for BACGenie
     proven_23 = [reported(e["cve"]) for e in BENCH if reported(e["cve"]) and reported(e["cve"]).get("verdict") == "PROVEN"]
     exec_23 = [reported(e["cve"]) for e in BENCH if attempted(reported(e["cve"]))]
     proven_22 = [r for r in proven_23 if r["cve"] not in EXCLUDE]
@@ -378,13 +378,13 @@ def build():
     # ---------------- Sheet 0: 0_结论摘要 ----------------
     ws = wb.active
     ws.title = "0_结论摘要"
-    title(ws, "Kaiti v2 · CVEGenie Benchmark 23 越权动态复现实验结论摘要", 6)
+    title(ws, "BACGenie · CVEGenie Benchmark 23 越权动态复现实验结论摘要", 6)
     summary_rows = [
-        ("核心结论", f"在 4090-1 服务器与统一基座模型 DeepSeek-V4.1-Flash 下，Kaiti v2 对 23 条越权 CVE 中的 {len(proven_23)} 条完成了物理双盲动态复现（PROVEN）；所有实际启动执行的 {len(exec_23)} 条样本在第 1 轮即 100% 一次性成功（0 抄近路、0 尝试失败），其余 2 条（ZITADEL、Autolab）因多服务靶场引导/构建时间窗口未启动。"),
+        ("核心结论", f"在 4090-1 服务器与统一基座模型 DeepSeek-V4.1-Flash 下，BACGenie 对 23 条越权 CVE 中的 {len(proven_23)} 条完成了物理双盲动态复现（PROVEN）；所有实际启动执行的 {len(exec_23)} 条样本在第 1 轮即 100% 一次性成功（0 抄近路、0 尝试失败），其余 2 条（ZITADEL、Autolab）因多服务靶场引导/构建时间窗口未启动。"),
         ("23条全集口径（实验一/四）", f"完全成功 {len(proven_23)}/23 = {len(proven_23)/23*100:.2f}%（已执行 {len(proven_23)}/{len(exec_23)} = 100.00%）；平均耗时 {avg_s_23:.1f}s（{avg_s_23/60:.1f} min），平均单条成本 ${avg_c_23:.3f}，总耗时 {secs_23/3600:.2f}h，总成本 ${cost_23:.3f}（含基线排除项 CVE-2024-9095 亦成功复现）。"),
         ("22条公平对比口径（实验二，排除9095）", f"完全成功（第三档）{len(proven_22)}/22 = {len(proven_22)/22*100:.2f}%（已执行 {len(proven_22)}/{len(exec_22)} = 100.00%），有备注瑕疵（第二档）0/22 = 0.00%；平均耗时 {avg_s_22:.1f}s，单次完全成功平均成本 ${avg_c_22:.3f}，总耗时 {secs_22/3600:.2f}h，总成本 ${cost_22:.3f}。"),
-        ("对比纯 Agent（22条口径）", f"纯 Agent 表面合格 20/22（90.91%），但其中 12/22（54.55%）存在向 EXP 传入高权限凭据或缺失攻击者权限校验的抄近路隐患，严格成功率仅 8/22（36.36%）；Kaiti v2 将严格成功率提升 +54.55 个百分点（2.50×），且耗时快 2.13×（721.9s vs 1540.3s）。"),
-        ("对比 CVEGenie（22条同模型 PDF 口径）", f"CVEGenie 在同模型 DeepSeek-V4.1-Flash 下表面成功 11/22（50.00%），扣除 6 条抄近路/CWE-915 未测提权后受限操作的样本后，严格成功率仅 5/22（22.73%），总成本 $88.48（单次严格成功成本 $17.70）；Kaiti v2 严格成功率高出 +68.18 个百分点（4.00×），提速 4.86×（721.9s vs 3505.2s），单次严格成功成本降至 1/60.8（若与原设计表 14/22=63.64%、$3.52/条对比，亦提升 +27.27 个百分点、成本降至 1/12.1）。"),
+        ("对比纯 Agent（22条口径）", f"纯 Agent 表面合格 20/22（90.91%），但其中 12/22（54.55%）存在向 EXP 传入高权限凭据或缺失攻击者权限校验的抄近路隐患，严格成功率仅 8/22（36.36%）；BACGenie 将严格成功率提升 +54.55 个百分点（2.50×），且耗时快 2.13×（721.9s vs 1540.3s）。"),
+        ("对比 CVEGenie（22条同模型 PDF 口径）", f"CVEGenie 在同模型 DeepSeek-V4.1-Flash 下表面成功 11/22（50.00%），扣除 6 条抄近路/CWE-915 未测提权后受限操作的样本后，严格成功率仅 5/22（22.73%），总成本 $88.48（单次严格成功成本 $17.70）；BACGenie 严格成功率高出 +68.18 个百分点（4.00×），提速 4.86×（721.9s vs 3505.2s），单次严格成功成本降至 1/60.8（若与原设计表 14/22=63.64%、$3.52/条对比，亦提升 +27.27 个百分点、成本降至 1/12.1）。"),
         ("无 PoC 情报条件验证（实验三）", "本次实测输入（results - v2）已剥离全部 GitHub Security Advisory 正文与公开 PoC 脚本（advisories=[]，且禁联网），仅凭 CVE 描述 + 官方补丁 Diff + 源码即实现已执行样本 100% 复现。"),
         ("六重假阳性排除门禁", "仅当 harness/gate.py 裁决 PROVEN 时计为成功：① 攻击者低权限实测为真；② 高权限正对照 200；③ 攻击者负对照 401/403；④ 公开输入零私密泄漏；⑤ 盲态攻击期间物理删除 private_verifier.json；⑥ 独立观察者回读匹配每轮新生成的密码学随机信标。"),
     ]
@@ -402,16 +402,16 @@ def build():
     # ---------------- Sheet 1: 0_说明 ----------------
     ws = wb.create_sheet("0_说明")
     info_lines = [
-        ("实验名称", "Kaiti v2 越权漏洞（Broken Access Control）双盲动态复现评估（CVEGenie Benchmark 23）"),
+        ("实验名称", "BACGenie 越权漏洞（Broken Access Control）双盲动态复现评估（CVEGenie Benchmark 23）"),
         ("实验环境与模型", "服务器 4090-1 · 统一模型 DeepSeek-V4.1-Flash（yeowl/deepseek-v4.1-flash） · 单条墙钟预算 45 分钟"),
-        ("系统架构", "Kaiti v2：Primary 战略主审（kaiti-planner） + 无状态最小知情面执行器（kaiti/worker） + 确定性双盲信标门禁（harness/gate.py）"),
+        ("系统架构", "BACGenie：Primary 战略主审（bacgenie-planner） + 无状态最小知情面执行器（bacgenie/worker） + 确定性双盲信标门禁（harness/gate.py）"),
         ("四个实验对应关系", "问题一（RQ1，表1-表2）：多轮重跑收敛性；问题二（RQ2，表3-表4）：与纯 Agent、CVEGenie 的三档效果及效率对比；问题三（RQ3，表5-表6）：漏洞情报缺失影响；问题四（RQ4，表7-表8）：跨项目、跨 CWE 与跨越权机制覆盖。"),
-        ("22条 vs 23条口径说明", "《实验表设计.md》在实验二（表3/表4）中排除 CVE-2024-9095（因纯 Agent 未验效果、CVEGenie 仅停在外部 GCP 前一步），故三方法横向主对比严格按 22 条计算；Kaiti v2 已通过 PostgreSQL 角色与发布副作用完整复现 9095，表4同时单列 23 条全集口径供核对。"),
+        ("22条 vs 23条口径说明", "《实验表设计.md》在实验二（表3/表4）中排除 CVE-2024-9095（因纯 Agent 未验效果、CVEGenie 仅停在外部 GCP 前一步），故三方法横向主对比严格按 22 条计算；BACGenie 已通过 PostgreSQL 角色与发布副作用完整复现 9095，表4同时单列 23 条全集口径供核对。"),
         ("CVEGenie 双口径说明", "表3/表4主列采用同模型实测报告《CVEGenie Benchmark 23.pdf》（22条中 11 条报成功：5 条完全成功 + 6 条有抄近路/Oracle瑕疵；总成本 $88.48，含 9095 全集为 $92.64）；表4同时保留《实验表设计.md》早期记录列（14 条完全成功 + 4 条有备注，总成本 $49.30）作为参考。"),
         ("成本与耗时口径", "参考单价：输入 $0.30/M、输出 $1.20/M、缓存读 $0.006/M（与 PDF 中 10273 的 $2.43 ≈ 7.59M×0.30 + 0.125M×1.20 严格一致）；Token 取自隔离 OpenCode SQLite 会话树全量累加。耗时为单条主审会话墙钟总时长，不含共享基础镜像/node_modules 预置构建时间。"),
         ("数据诚实原则", "未启动执行的样本（ZITADEL、Autolab）及单夜窗口未运行的消融组（表5/表6部分列）一律明确标注“未执行/未单独执行”，绝不伪装为成功，也不将未执行的 0 耗时混入均值分母。"),
     ]
-    title(ws, "Kaiti v2 实验口径与工作簿说明", 4)
+    title(ws, "BACGenie 实验口径与工作簿说明", 4)
     header_row(ws, 2, ["说明项", "详细定义", "", ""])
     ws.merge_cells(start_row=2, start_column=2, end_row=2, end_column=4)
     for i, (k, v) in enumerate(info_lines, 3):
@@ -510,7 +510,7 @@ def build():
 
     # ---------------- Sheet 4: 表3_三方法对比 (RQ2) ----------------
     ws = wb.create_sheet("表3_三方法对比")
-    title(ws, "表3：23 条 CVE 三种方法详细对比表（纯 Agent / CVEGenie 同模型 PDF / 我的方法 Kaiti v2）", 16)
+    title(ws, "表3：23 条 CVE 三种方法详细对比表（纯 Agent / CVEGenie 同模型 PDF / 我的方法 BACGenie）", 16)
     header_row(ws, 2, [
         "CVE", "项目", "版本号", "CWE",
         "纯Agent 成功", "纯Agent 时间(s)", "纯Agent 成本($)", "纯Agent 人工审计备注",
@@ -551,7 +551,7 @@ def build():
         cell(ws, i, 11, cg.get("cvegenie_cost_usd"), numfmt="0.00")
         cell(ws, i, 12, (excl_tag + c_rem) if c_rem else excl_tag, align=LEFT)
 
-        # Kaiti v2
+        # BACGenie
         m_att = attempted(rep)
         m_ok = bool(rep and rep.get("verdict") == "PROVEN")
         cell(ws, i, 13, "✅" if m_ok else ("❌" if m_att else "未执行"),
@@ -578,8 +578,8 @@ def build():
         "纯 Agent（22条）",
         "CVEGenie·同模型PDF（22条主对比）",
         "CVEGenie·原设计表（22条参考）",
-        "我的方法 Kaiti v2（22条主对比）",
-        "我的方法 Kaiti v2（23条全集含9095）",
+        "我的方法 BACGenie（22条主对比）",
+        "我的方法 BACGenie（23条全集含9095）",
         "统计口径说明",
     ], height=40)
 
@@ -615,7 +615,7 @@ def build():
     widths(ws, {"A": 30, "B": 18, "C": 24, "D": 22, "E": 24, "F": 24, "G": 52})
     r0 = 3 + len(m_agent_22) + 1
     ws.merge_cells(start_row=r0, start_column=1, end_row=r0, end_column=7)
-    cell(ws, r0, 1, "核心核对说明：① 主对比严格遵循《实验表设计.md》排除 CVE-2024-9095（N=22），所有耗时与成本均严格在相同 22 条子集上求和（修正了旧摘要中将 23 条总成本混入 22 条表的问题：CVEGenie PDF 22条总成本为 $88.48，含 9095 的 $4.16 后 23 条总成本为 $92.64；Kaiti v2 22条总成本为 $5.8260，含 9095 的 $0.4534 后 23 条总成本为 $6.2794）。② 我的方法第一档的 2 条（CVE-2025-27507 ZITADEL、CVE-2024-52584 Autolab）均为单夜窗口内未启动靶场，实际执行的 20/20（22条口径）及 21/21（23条口径）成功率均为 100.00%。", align=LEFT, border=False)
+    cell(ws, r0, 1, "核心核对说明：① 主对比严格遵循《实验表设计.md》排除 CVE-2024-9095（N=22），所有耗时与成本均严格在相同 22 条子集上求和（修正了旧摘要中将 23 条总成本混入 22 条表的问题：CVEGenie PDF 22条总成本为 $88.48，含 9095 的 $4.16 后 23 条总成本为 $92.64；BACGenie 22条总成本为 $5.8260，含 9095 的 $0.4534 后 23 条总成本为 $6.2794）。② 我的方法第一档的 2 条（CVE-2025-27507 ZITADEL、CVE-2024-52584 Autolab）均为单夜窗口内未启动靶场，实际执行的 20/20（22条口径）及 21/21（23条口径）成功率均为 100.00%。", align=LEFT, border=False)
     ws.row_dimensions[r0].height = 48
 
     # ---------------- Sheet 6: 表5_信息缺失详细 (RQ3) ----------------
@@ -708,9 +708,9 @@ def build():
 
     # ---------------- Sheet 8: 表7_覆盖详细 (RQ4) ----------------
     ws = wb.create_sheet("表7_覆盖详细")
-    title(ws, "表7：23 条 CVE 跨项目与跨 CWE 覆盖情况详细表（我的方法 Kaiti v2）", 10)
+    title(ws, "表7：23 条 CVE 跨项目与跨 CWE 覆盖情况详细表（我的方法 BACGenie）", 10)
     header_row(ws, 2, [
-        "CVE", "项目", "版本号", "Reported CWE", "Kaiti 机制分类",
+        "CVE", "项目", "版本号", "Reported CWE", "BACGenie 机制分类",
         "成功", "时间(s)", "成本($)", "未完成阶段", "机制验证与归因说明",
     ], height=38)
     for i, e in enumerate(BENCH, 3):
@@ -735,7 +735,7 @@ def build():
 
     # ---------------- Sheet 9: 表8_覆盖汇总 (RQ4) ----------------
     ws = wb.create_sheet("表8_覆盖汇总")
-    title(ws, "表8：按项目、CWE 与 Kaiti 越权机制维度的覆盖汇总表", 9)
+    title(ws, "表8：按项目、CWE 与 BACGenie 越权机制维度的覆盖汇总表", 9)
     header_row(ws, 2, [
         "分组维度", "具体类别", "总样本数", "已执行数", "成功复现数",
         "全集成功率", "已执行成功率", "平均耗时（s）", "总成本（$）",
@@ -803,7 +803,7 @@ def build():
     # ---------------- Sheet 11: 逐条结论说明 ----------------
     ws = wb.create_sheet("逐条结论说明")
     title(ws, "逐条漏洞根因、验证机制与独立复核指南", 7)
-    header_row(ws, 2, ["CVE", "项目 / 版本", "CWE", "状态", "Kaiti 机制分类", "源码根因与动态验证结论", "一键复核命令 / 产物"], height=34)
+    header_row(ws, 2, ["CVE", "项目 / 版本", "CWE", "状态", "BACGenie 机制分类", "源码根因与动态验证结论", "一键复核命令 / 产物"], height=34)
     for i, e in enumerate(BENCH, 3):
         cve = e["cve"]
         rep = reported(cve)
@@ -817,7 +817,7 @@ def build():
         cell(ws, i, 4, "✅ 已复现" if ok else ("❌ 失败" if att else "未执行"), fill=GREEN if ok else (RED if att else GRAY))
         cell(ws, i, 5, m_tag)
         cell(ws, i, 6, f"【根因】{m_desc}\n【证据】{one_s}" if ok else m_desc, align=LEFT)
-        cell(ws, i, 7, (f"python3 harness/gate.py run runs/{cve}\n报告: runs/{cve}/reproduction_report.md" if ok else "未启动 Kaiti 会话"), align=LEFT)
+        cell(ws, i, 7, (f"python3 harness/gate.py run runs/{cve}\n报告: runs/{cve}/reproduction_report.md" if ok else "未启动 BACGenie 会话"), align=LEFT)
         ws.row_dimensions[i].height = 50
     widths(ws, {"A": 18, "B": 22, "C": 16, "D": 12, "E": 18, "F": 74, "G": 42})
     ws.freeze_panes = "B3"

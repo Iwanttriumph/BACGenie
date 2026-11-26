@@ -59,7 +59,7 @@ FORBIDDEN_EXPLOIT_PATTERNS = [
     r"rpc_token",
     r"/var/run/docker\.sock",
     r":19999\b",
-    r"X-Kaiti-Verifier-Token",
+    r"-Verifier-Token",
 ]
 
 
@@ -95,11 +95,21 @@ def audit_exploit_ast(source: str) -> List[str]:
 
 
 def parse_test_sh_env(test_sh_text: str) -> Dict[str, str]:
+    """Parse runtime environment exports from test.sh (supports both BACGENIE_* and legacy prefixes)."""
     out: Dict[str, str] = {}
-    for key in ("KAITI_BASE_URL", "KAITI_DB_HOST", "KAITI_DB_PORT", "KAITI_PGPASSWORD", "KAITI_RPC_URL"):
-        m = re.search(rf'export\s+{key}="([^"]*)"', test_sh_text)
-        out[key] = m.group(1) if m else ""
+    for m in re.finditer(
+        r'export\s+([A-Z0-9]+_(?:BASE_URL|DB_HOST|DB_PORT|PGPASSWORD|RPC_URL))="([^"]*)"',
+        test_sh_text,
+    ):
+        out[m.group(1)] = m.group(2)
     return out
+
+
+def resolve_base_url_from_env(env_map: Dict[str, str]) -> str:
+    for k, v in env_map.items():
+        if k.endswith("_BASE_URL") and v:
+            return v
+    return ""
 
 
 def extract_main_image(compose_text: str) -> str:
@@ -417,7 +427,13 @@ def evaluate_invariants(ora, nonces, public_data, before_data, attack_data, afte
 def run_py(script: Path, args, timeout=180):
     env = dict(os.environ)
     env["PATH"] = f"{RUN_DIR / 'bin'}:{env.get('PATH', '/usr/local/bin:/usr/bin:/bin')}"
-    env["KAITI_RPC_TOKEN_FILE"] = str(RUN_DIR / "rpc_token.txt")
+    token_file = str(RUN_DIR / "rpc_token.txt")
+    env["BACGENIE_RPC_TOKEN_FILE"] = token_file
+    # Propagate token file path to any legacy *_RPC_URL prefix present in test.sh
+    for k in list(env.keys()):
+        if k.endswith("_RPC_URL"):
+            prefix = k[: -len("_RPC_URL")]
+            env[f"{prefix}_RPC_TOKEN_FILE"] = token_file
     env["PYTHONUNBUFFERED"] = "1"
     env["NO_PROXY"] = "localhost,127.0.0.1,api,app,mobsf,web,db,redis"
     env["no_proxy"] = "localhost,127.0.0.1,api,app,mobsf,web,db,redis"
@@ -459,10 +475,10 @@ def cmd_setup():
     trial_flag = f"FLAG{{bac_{cve_slug}_{secrets.token_hex(16)}}}"
     nonces = {
         "run_id": f"run_{dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ')}_{secrets.token_hex(3)}",
-        "canary": f"kaiti_canary_{secrets.token_hex(12)}",
-        "old_value": f"kaiti_old_{secrets.token_hex(8)}",
-        "new_value": f"kaiti_new_{secrets.token_hex(8)}",
-        "create_tag": f"kaiti_create_{secrets.token_hex(8)}",
+        "canary": f"bacgenie_canary_{secrets.token_hex(12)}",
+        "old_value": f"bacgenie_old_{secrets.token_hex(8)}",
+        "new_value": f"bacgenie_new_{secrets.token_hex(8)}",
+        "create_tag": f"bacgenie_create_{secrets.token_hex(8)}",
     }
 
     nonce_path = SECRET_DIR / "nonce_bundle.json"
@@ -668,8 +684,8 @@ def verify_container_isolation() -> dict:
     )
     absent = all(not os.path.exists(p) for p in private_paths) and logs_clean
     env_clean = not any(
-        k in os.environ
-        for k in ("KAITI_PGPASSWORD", "KAITI_RPC_URL", "KAITI_RPC_TOKEN_FILE", "EXPLOIT_FLAG")
+        k.endswith(("_PGPASSWORD", "_RPC_URL", "_RPC_TOKEN_FILE")) or k == "EXPLOIT_FLAG"
+        for k in os.environ
     )
     return {
         "running_uid": os.getuid() if hasattr(os, "getuid") else -1,
@@ -1020,8 +1036,8 @@ def verify_single_cve(
             "artifacts": artifacts,
         }
 
-    kaiti_env = parse_test_sh_env(test_sh_text)
-    base_url = kaiti_env["KAITI_BASE_URL"]
+    runtime_env = parse_test_sh_env(test_sh_text)
+    base_url = resolve_base_url_from_env(runtime_env)
     victim_service = urllib.parse.urlparse(base_url).hostname or "api"
     attacker_image = extract_main_image(compose_text)
 
@@ -1100,7 +1116,7 @@ def verify_single_cve(
         ).strip()
 
         env_flags: List[str] = []
-        for k, v in kaiti_env.items():
+        for k, v in runtime_env.items():
             env_flags.extend(["-e", f"{k}={v}"])
 
         # Step 1: Run privileged setup + leak scan + before assertions inside `main`

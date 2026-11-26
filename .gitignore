@@ -13,6 +13,3 @@ experiment/logs/
 experiments/
 /results - bench/
 /trigger pattern输出/
-results/**/llm_response.json
-results - v2/**/llm_response.json
-**/oracle_llm_response.json

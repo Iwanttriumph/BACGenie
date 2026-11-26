@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Kaiti v2 batch experiment runner (overnight supervisor).
+BACGenie batch experiment runner (overnight supervisor).
 
 For each CVE:
   - isolated OpenCode runtime (own XDG_* dirs and DB)
-  - one kaiti-planner session with DeepSeek V4.1 Flash
+  - one bacgenie-planner session with DeepSeek V4.1 Flash
   - wall-clock timeout, log capture
   - after exit, collect verdict.json + token usage from the isolated DB
 
@@ -93,11 +93,11 @@ def build_prompt(entry, index, timeout_min):
     cve = entry["cve"]
     src = source_dir(entry)
     app_port, db_port = ports_for(index)
-    comp = "kaiti_" + cve.lower().replace("-", "_")
-    input_json = ROOT / "results - v2" / cve / f"{cve}.json"
+    comp = "bacgenie_" + cve.lower().replace("-", "_")
+    input_json = ROOT / "bench_input" / f"{cve}.json"
     lines = [
         f"目标漏洞：{cve}（{entry['project']} {entry['version']}，CWE: {', '.join(entry['cwe'])}）。",
-        "请按 Kaiti 主审架构师规范完成全流程：源码锚定与 Oracle 契约、4090-1 隔离靶场与 Solution 2 前置状态、Clean-Room 盲态攻击脚本、双盲动态信标终审，并签发 reproduction_report.md。",
+        "请按 BACGenie 主审架构师规范完成全流程：源码锚定与 Oracle 契约、4090-1 隔离靶场与 Solution 2 前置状态、Clean-Room 盲态攻击脚本、双盲动态信标终审，并签发 reproduction_report.md。",
         "",
         "【本次实验硬约束】",
         "1) 禁止 websearch / webfetch（已禁用，调用会失败）；所有材料均已本地化。",
@@ -129,7 +129,7 @@ def build_prompt(entry, index, timeout_min):
             f"6) 若 `runs/{cve}/01_tp.json`、`02_oracle_contract.json`、`prep.py`、`verify.py` 已存在且 check-before 通过，必须复用，不要重写。"
         )
     lines += [
-        f"7) 端口分配（仅绑 127.0.0.1）：应用 {app_port}，数据库 {db_port}。COMPOSE_PROJECT_NAME={comp}，容器/镜像名必须带 `kaiti` 前缀且唯一，严禁触碰非 kaiti 容器与端口。",
+        f"7) 端口分配（仅绑 127.0.0.1）：应用 {app_port}，数据库 {db_port}。COMPOSE_PROJECT_NAME={comp}，容器/镜像名必须带 `bacgenie` 前缀且唯一，严禁触碰非 bacgenie 容器与端口。",
         f"8) 总预算 {timeout_min} 分钟；若 runs/{cve}/01_tp.json 与 02_oracle_contract.json 已存在且 validate-contract 通过，请复核后直接复用，不要推倒重来。",
         "9) 全程不要询问用户；遇到阻塞自主决策并在 00_ledger.md 记录。",
         f"10) 收尾必须落盘：runs/{cve}/verdict.json、runs/{cve}/evidence_bundle.json、runs/{cve}/reproduction_report.md。报告要让非安全工程师也能看懂：用六段式、原文报文、前后 Diff 和一张通俗的“攻击前/攻击后”对照表说明复现完全成功。",
@@ -157,7 +157,7 @@ def collect_metrics(rt, cve):
         con.row_factory = sqlite3.Row
         root = con.execute(
             "select id from session_v2 where title = ? order by time_created desc limit 1",
-            (f"Kaiti-{cve}",),
+            (f"BACGenie-{cve}",),
         ).fetchone()
         if not root:
             root = con.execute(
@@ -214,7 +214,7 @@ def collect_metrics(rt, cve):
 def stop_containers(entry):
     """Fast, exception-proof cleanup: remove only this compose project's containers."""
     cve = entry["cve"]
-    comp = "kaiti_" + cve.lower().replace("-", "_")
+    comp = "bacgenie_" + cve.lower().replace("-", "_")
     try:
         subprocess.run(
             [
@@ -295,9 +295,9 @@ def run_one(entry, index, rnd, timeout_s, timeout_min):
         "--standalone",
         "--auto",
         "--title",
-        f"Kaiti-{cve}",
+        f"BACGenie-{cve}",
         "--agent",
-        "kaiti-planner",
+        "bacgenie-planner",
         "-m",
         MODEL,
         prompt,

@@ -5,7 +5,7 @@ Each CVE gets:
   runs/<CVE>/env/docker-compose.yml
   runs/<CVE>/INFRA.md
 The app source comes read-only from bench_cache; node_modules comes from the
-tmpfs prebuilt tree (/dev/shm/kaiti-nm/<version>); Postgres data lives on tmpfs.
+tmpfs prebuilt tree (/dev/shm/bacgenie-nm/<version>); Postgres data lives on tmpfs.
 No docker build and no npm install at run time.
 """
 import json
@@ -13,18 +13,18 @@ import os
 import sys
 from pathlib import Path
 
-ROOT = Path("/hdd1/congxy/AAPaper/NewIdea/BACGenie/kaiti")
+ROOT = Path("/hdd1/congxy/AAPaper/NewIdea/BACGenie/bacgenie")
 BASE = ROOT.parent
 BENCH = json.loads((ROOT / "experiment/benchmark_23.json").read_text())
 SRC = BASE / "bench_cache/sources"
-NM = Path("/dev/shm/kaiti-nm")
+NM = Path("/dev/shm/bacgenie-nm")
 
 TEMPLATE = """name: {comp}
 
 services:
   db:
     image: postgres:15
-    container_name: kaiti-{cve_l}-db
+    container_name: bacgenie-{cve_l}-db
     restart: "no"
     environment:
       POSTGRES_USER: postgres
@@ -42,7 +42,7 @@ services:
 
   api:
     image: node:20-bookworm-slim
-    container_name: kaiti-{cve_l}-api
+    container_name: bacgenie-{cve_l}-api
     restart: "no"
     depends_on:
       db:
@@ -76,7 +76,7 @@ INFRA = """# {cve} 预置靶场（请直接复用，禁止重建/重装）
 - 应用：{project} {version}
 - 应用源码+依赖（tmpfs，直接挂载到 /app）：`{nm_tree}`（源码来自 `{src}`）
 - 宿主端口：应用 `http://127.0.0.1:{app_port}`，数据库 `127.0.0.1:{db_port}`
-- compose 项目名：`{comp}`，容器 `kaiti-{cve_l}-api` / `kaiti-{cve_l}-db`
+- compose 项目名：`{comp}`，容器 `bacgenie-{cve_l}-api` / `bacgenie-{cve_l}-db`
 - 启动：`cd runs/{cve}/env && COMPOSE_PROJECT_NAME={comp} docker compose up -d --wait`
 - 停止/清空：`COMPOSE_PROJECT_NAME={comp} docker compose down -v`
 - **不要**执行 `docker compose build`、`npm install` 或修改 Dockerfile；本环境不需要构建。
@@ -100,7 +100,7 @@ def main():
         env = ROOT / "runs" / cve / "env"
         env.mkdir(parents=True, exist_ok=True)
         # Writable per-CVE source copy on tmpfs (app may write caches/logs).
-        src_run = Path("/dev/shm/kaiti-src") / cve
+        src_run = Path("/dev/shm/bacgenie-src") / cve
         if src_run.exists():
             import shutil as _sh
             _sh.rmtree(src_run)
@@ -117,10 +117,10 @@ def main():
         (src_run / "node_modules").mkdir(exist_ok=True)
         app_port = 21000 + i
         db_port = 23000 + i
-        comp = "kaiti_" + cve.lower().replace("-", "_")
+        comp = "bacgenie_" + cve.lower().replace("-", "_")
         cve_l = cve.lower()
-        pgpass = f"kaiti_pg_{cve_l.replace('-', '_')}"
-        jwt = f"kaiti_jwt_{cve_l.replace('-', '_')}_fixed_secret"
+        pgpass = f"bacgenie_pg_{cve_l.replace('-', '_')}"
+        jwt = f"bacgenie_jwt_{cve_l.replace('-', '_')}_fixed_secret"
         text = TEMPLATE.format(
             comp=comp, cve=cve, cve_l=cve_l, src=src, src_run=src_run, nm=nm, nm_tree=nm_tree,
             app_port=app_port, db_port=db_port, pgpass=pgpass, jwt=jwt,

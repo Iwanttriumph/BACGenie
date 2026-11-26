@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 """Unified BACGenie End-to-End Pipeline Orchestrator.
 
-Chains the complete BACGenie workflow in one project:
-  Stage 1 (`tp-oracle`)  : Static/source-grounded Trigger Pattern & Oracle design (`src/main.py`)
-  Stage 2 (`reproduce`)  : Dynamic clean-room reproduction (`kaiti_run.sh` / `experiment/run_batch.py`)
-  Stage 3 (`bundle`)     : Standardized Harbor 0.22.0 deliverable packaging (`experiment/build_harbor_bundle.py`)
-  Stage 4 (`verify`)     : Two-Container Flag-Capture + Source-Grounded Agent Verifier (`verifier/main.py`)
+Chains the complete 3-stage BACGenie workflow in one project:
+  Stage 1 (`reproduce`)      : OpenCode Primary/Worker dynamic reproduction (TP + Oracle + Prep + Blind Client + Gate)
+  Stage 2 (`bundle`)         : Standardized Harbor 0.22.0 deliverable packaging (`experiment/build_harbor_bundle.py`)
+  Stage 3 (`verify`)         : Two-Container Flag-Capture + Source-Grounded Agent Verifier (`verifier/main.py`)
 
 Composite stages:
-  `post-reproduce`       : `bundle` -> `verify`
-  `all`                  : `reproduce` -> `bundle` -> `verify`
+  `post-reproduce`           : `bundle` -> `verify`
+  `all`                      : `reproduce` -> `bundle` -> `verify`
 """
 from __future__ import annotations
 
@@ -27,7 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(description="BACGenie Unified Pipeline (Reproduce -> Bundle -> Verify)")
     ap.add_argument(
         "--stage",
-        choices=["tp-oracle", "reproduce", "bundle", "verify", "post-reproduce", "all"],
+        choices=["reproduce", "bundle", "verify", "post-reproduce", "all"],
         default="verify",
         help="Pipeline stage to execute (default: verify)",
     )
@@ -49,15 +48,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--verifier-results-dir",
         type=Path,
         default=REPO_ROOT / "verifier_results",
-        help="Output directory for Stage 4 Verifier reports (default: ./verifier_results)",
+        help="Output directory for Verifier reports (default: ./verifier_results)",
     )
     ap.add_argument("--concurrency", type=int, default=3, help="Parallel workers for batch / container verification")
-    ap.add_argument("--round", type=int, default=1, help="Experiment round index for Stage 2 batch reproduction")
-    ap.add_argument("--timeout", type=int, default=2700, help="Per-CVE timeout (seconds) for Stage 2 reproduction")
+    ap.add_argument("--round", type=int, default=1, help="Experiment round index for batch reproduction")
+    ap.add_argument("--timeout", type=int, default=2700, help="Per-CVE timeout (seconds) for reproduction")
     ap.add_argument("--skip-image-export", action="store_true", default=True, help="Skip exporting large .tar.gz images during bundle stage")
     ap.add_argument("--export-images", action="store_true", help="Export full Docker .tar.gz archives during bundle stage")
-    ap.add_argument("--reuse-dynamic", action="store_true", help="Reuse cached dynamic_run.json in Stage 4")
-    ap.add_argument("--skip-dynamic", action="store_true", help="Run Stage 4 static/Agent audit without starting containers")
+    ap.add_argument("--reuse-dynamic", action="store_true", help="Reuse cached dynamic_run.json in verify stage")
+    ap.add_argument("--skip-dynamic", action="store_true", help="Run verify static/Agent audit without starting containers")
     ap.add_argument("--overwrite", action="store_true", help="Overwrite existing cached stage outputs")
     ap.add_argument("--model", type=str, default="", help="Override LLM model name")
     ap.add_argument("--base-url", type=str, default="", help="Override OpenAI-compatible API base URL")
@@ -75,22 +74,12 @@ def run_pipeline(argv: Optional[List[str]] = None) -> int:
     args = build_parser().parse_args(argv)
     py = sys.executable
 
-    if args.stage == "tp-oracle":
-        cmd = [py, str(REPO_ROOT / "agent.py"), "--stage", "all"]
-        if args.cve:
-            for c in args.cve:
-                rc = _run_subcmd(cmd + ["--cve", c] + (["--overwrite"] if args.overwrite else []))
-                if rc != 0:
-                    return rc
-            return 0
-        return _run_subcmd(cmd + (["--overwrite"] if args.overwrite else []))
-
     if args.stage in ("reproduce", "all"):
         if os.name == "nt" and not args.ssh:
-            print("[pipeline] Note: Stage 2 OpenCode reproduction requires a Linux Docker host.", file=sys.stderr)
+            print("[pipeline] Note: OpenCode reproduction requires a Linux Docker host.", file=sys.stderr)
             return 2
-        if len(args.cve) == 1 and (REPO_ROOT / "kaiti_run.sh").exists() and os.name != "nt":
-            cmd = ["bash", str(REPO_ROOT / "kaiti_run.sh"), args.cve[0]]
+        if len(args.cve) == 1 and (REPO_ROOT / "bacgenie_run.sh").exists() and os.name != "nt":
+            cmd = ["bash", str(REPO_ROOT / "bacgenie_run.sh"), args.cve[0]]
             if args.model:
                 cmd.append(args.model)
         else:

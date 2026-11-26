@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Kaiti v2 Double-Blind Verification & Replay Gate (Pure Python 3 Stdlib).
+BACGenie Double-Blind Verification & Replay Gate (Pure Python 3 Stdlib).
 
 Enforces physical privilege separation, runtime cryptographic canary/nonce injection,
 sibling sentinel health checks, and three-valued verdict generation:
@@ -109,10 +109,10 @@ def generate_nonces(seed_tag: str = "") -> Dict[str, str]:
     suffix = seed_tag or secrets.token_hex(6)
     return {
         "run_id": f"run_{dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ')}_{secrets.token_hex(3)}",
-        "canary": f"kaiti_canary_{secrets.token_hex(8)}" if not seed_tag else f"kaiti_sample_canary_{suffix}",
-        "old_value": f"kaiti_old_{secrets.token_hex(6)}" if not seed_tag else f"kaiti_sample_old_{suffix}",
-        "new_value": f"kaiti_new_{secrets.token_hex(6)}" if not seed_tag else f"kaiti_sample_new_{suffix}",
-        "create_tag": f"kaiti_create_{secrets.token_hex(6)}" if not seed_tag else f"kaiti_sample_create_{suffix}",
+        "canary": f"bacgenie_canary_{secrets.token_hex(8)}" if not seed_tag else f"bacgenie_sample_canary_{suffix}",
+        "old_value": f"bacgenie_old_{secrets.token_hex(6)}" if not seed_tag else f"bacgenie_sample_old_{suffix}",
+        "new_value": f"bacgenie_new_{secrets.token_hex(6)}" if not seed_tag else f"bacgenie_sample_new_{suffix}",
+        "create_tag": f"bacgenie_create_{secrets.token_hex(6)}" if not seed_tag else f"bacgenie_sample_create_{suffix}",
     }
 
 
@@ -516,7 +516,7 @@ def cmd_check_before(run_dir: Path) -> int:
         raise FileNotFoundError("Both prep.py and verify.py must exist in run_dir")
 
     sample_nonces = generate_nonces(seed_tag="devcheck")
-    with tempfile.TemporaryDirectory(prefix="kaiti_before_") as tmp:
+    with tempfile.TemporaryDirectory(prefix="bacgenie_before_") as tmp:
         tmp_path = Path(tmp)
         nonce_file = tmp_path / "nonce_bundle.json"
         priv_file = tmp_path / "private_verifier.json"
@@ -598,7 +598,7 @@ def cmd_run(run_dir: Path) -> int:
         "steps": {},
     }
 
-    with tempfile.TemporaryDirectory(prefix="kaiti_gate_") as work_tmp:
+    with tempfile.TemporaryDirectory(prefix="bacgenie_gate_") as work_tmp:
         wdir = Path(work_tmp)
         nonce_path = wdir / "nonce_bundle.json"
         priv_path = wdir / "private_verifier.json"
@@ -661,7 +661,7 @@ def cmd_run(run_dir: Path) -> int:
 
         if ora["oracle_type"] != "O3":
             # O1 / O2: Private verifier secrets exist ONLY in gate.py RAM while exploit.py runs.
-            with tempfile.TemporaryDirectory(prefix="kaiti_blind_") as blind_tmp:
+            with tempfile.TemporaryDirectory(prefix="bacgenie_blind_") as blind_tmp:
                 bdir = Path(blind_tmp)
                 blind_pub = bdir / "public_attacker.json"
                 blind_out = bdir / "attack_trace.json"
@@ -678,7 +678,7 @@ def cmd_run(run_dir: Path) -> int:
                     shutil.copyfile(blind_out, attack_path)
         else:
             # O3: Step 3a — Mandatory Solo Attacker Baseline (zero victim traffic; secrets only in RAM)
-            with tempfile.TemporaryDirectory(prefix="kaiti_solo_") as solo_tmp:
+            with tempfile.TemporaryDirectory(prefix="bacgenie_solo_") as solo_tmp:
                 sdir = Path(solo_tmp)
                 solo_pub = sdir / "public_attacker.json"
                 solo_out = sdir / "solo_trace.json"
@@ -707,8 +707,8 @@ def cmd_run(run_dir: Path) -> int:
 
             # O3: Step 3b — Scheduled Victim Traffic + Blind Attacker Execution
             relation = ora["o3_schedule"]["relation"]
-            with tempfile.TemporaryDirectory(prefix="kaiti_vsim_") as vsim_tmp, \
-                 tempfile.TemporaryDirectory(prefix="kaiti_blind_") as blind_tmp:
+            with tempfile.TemporaryDirectory(prefix="bacgenie_vsim_") as vsim_tmp, \
+                 tempfile.TemporaryDirectory(prefix="bacgenie_blind_") as blind_tmp:
                 vdir, bdir = Path(vsim_tmp), Path(blind_tmp)
                 os.chmod(vdir, 0o700)
                 v_priv = vdir / "priv.json"

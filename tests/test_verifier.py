@@ -171,21 +171,21 @@ class TestSandboxHelpers(unittest.TestCase):
         self.assertTrue(any("19999" in v for v in audit_exploit_ast(bad_rpc)))
 
     def test_parse_test_sh_and_sanitization(self) -> None:
-        tsh = 'export KAITI_BASE_URL="http://web:3000"\nexport KAITI_RPC_URL="http://web:19999"\n'
+        tsh = 'export BACGENIE_BASE_URL="http://web:3000"\nexport BACGENIE_RPC_URL="http://web:19999"\n'
         env = parse_test_sh_env(tsh)
-        self.assertEqual(env["KAITI_BASE_URL"], "http://web:3000")
-        self.assertEqual(env["KAITI_RPC_URL"], "http://web:19999")
+        self.assertEqual(env["BACGENIE_BASE_URL"], "http://web:3000")
+        self.assertEqual(env["BACGENIE_RPC_URL"], "http://web:19999")
 
         sanitized = sanitize_public_input({"base_url": "http://api:3333", "attacker_auth": {"private_api_key": "secret12345"}})
         self.assertEqual(sanitized["base_url"], "http://api:3333")
         self.assertTrue(sanitized["attacker_auth"]["private_api_key"].startswith("<redacted"))
 
         compacted = sanitize_and_compact_trace(
-            {"requests_sent": [{"response": {"body": "prefix " + ("A" * 3500) + " kaiti_canary_abc123"}}]},
-            {"canary": "kaiti_canary_abc123"},
+            {"requests_sent": [{"response": {"body": "prefix " + ("A" * 3500) + " bacgenie_canary_abc123"}}]},
+            {"canary": "bacgenie_canary_abc123"},
         )
         body_out = compacted["requests_sent"][0]["response"]["body"]
-        self.assertNotIn("kaiti_canary_abc123", body_out)
+        self.assertNotIn("bacgenie_canary_abc123", body_out)
         self.assertIn("<RUNTIME_CANARY_MATCHED>", body_out)
 
 

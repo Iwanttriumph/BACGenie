@@ -42,8 +42,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-KAITI_ROOT = Path(__file__).resolve().parent.parent
-BASE_ROOT = KAITI_ROOT.parent if (KAITI_ROOT.name == "kaiti" and (KAITI_ROOT.parent / "deliverables").exists()) else KAITI_ROOT
+BACGENIE_ROOT = Path(__file__).resolve().parent.parent
+BASE_ROOT = BACGENIE_ROOT.parent if (BACGENIE_ROOT.name == "bacgenie" and (BACGENIE_ROOT.parent / "deliverables").exists()) else BACGENIE_ROOT
 OUT_BUNDLE = BASE_ROOT / "deliverables" / "BACGenie"
 
 APP_DIR_MAP = {
@@ -62,7 +62,7 @@ def sanitize_text_no_cve(text: str) -> str:
         return ""
     text = re.sub(r"CVE-\d{4}-\d+", "the target issue", text, flags=re.IGNORECASE)
     text = re.sub(r"GHSA-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}", "advisory", text, flags=re.IGNORECASE)
-    text = re.sub(r"kaiti_(?:canary|old|new|create)_[a-zA-Z0-9_]+", "<runtime_nonce>", text)
+    text = re.sub(r"bacgenie_(?:canary|old|new|create)_[a-zA-Z0-9_]+", "<runtime_nonce>", text)
     return text
 
 
@@ -129,11 +129,11 @@ import subprocess
 import sys
 import urllib.request
 
-PG_HOST = os.environ.get("KAITI_DB_HOST", "db")
-PG_PORT = os.environ.get("KAITI_DB_PORT", "5432")
-PG_PASS = os.environ.get("KAITI_PGPASSWORD", "")
-RPC_URL = os.environ.get("KAITI_RPC_URL", "")
-RPC_TOKEN_FILE = os.environ.get("KAITI_RPC_TOKEN_FILE", "/tests/private/rpc_token.txt")
+PG_HOST = os.environ.get("BACGENIE_DB_HOST", "db")
+PG_PORT = os.environ.get("BACGENIE_DB_PORT", "5432")
+PG_PASS = os.environ.get("BACGENIE_PGPASSWORD", "")
+RPC_URL = os.environ.get("BACGENIE_RPC_URL", "")
+RPC_TOKEN_FILE = os.environ.get("BACGENIE_RPC_TOKEN_FILE", "/tests/private/rpc_token.txt")
 
 
 def read_token() -> str:
@@ -151,7 +151,7 @@ def call_rpc(path: str, payload: dict) -> dict:
         data=data,
         headers={
             "Content-Type": "application/json",
-            "X-Kaiti-Verifier-Token": read_token(),
+            "X-BACGenie-Verifier-Token": read_token(),
         },
         method="POST",
     )
@@ -264,7 +264,7 @@ if __name__ == "__main__":
 VERIFIER_RPC_PY = r'''#!/usr/bin/env python3
 """
 Internal SHA256-authenticated verifier helper daemon (runs inside app/mobsf/web sidecar).
-Only accepts requests carrying X-Kaiti-Verifier-Token whose SHA-256 matches KAITI_ADMIN_SHA256.
+Only accepts requests carrying X-BACGenie-Verifier-Token whose SHA-256 matches BACGENIE_ADMIN_SHA256.
 """
 import base64
 import hashlib
@@ -278,10 +278,10 @@ import sys
 import threading
 import time
 
-EXPECTED_HASH = os.environ.get("KAITI_ADMIN_SHA256", "")
-PORT = int(os.environ.get("KAITI_RPC_PORT", "19999"))
-MODE = os.environ.get("KAITI_RPC_MODE", "generic")
-WORKDIR = os.environ.get("KAITI_RPC_WORKDIR", "/")
+EXPECTED_HASH = os.environ.get("BACGENIE_ADMIN_SHA256", "")
+PORT = int(os.environ.get("BACGENIE_RPC_PORT", "19999"))
+MODE = os.environ.get("BACGENIE_RPC_MODE", "generic")
+WORKDIR = os.environ.get("BACGENIE_RPC_WORKDIR", "/")
 
 GUNICORN_LOCK = threading.Lock()
 GUNICORN_PROC = None
@@ -319,7 +319,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         return
 
     def _auth_ok(self) -> bool:
-        tok = self.headers.get("X-Kaiti-Verifier-Token", "")
+        tok = self.headers.get("X-BACGenie-Verifier-Token", "")
         if not tok or not EXPECTED_HASH:
             return False
         digest = hashlib.sha256(tok.encode("utf-8")).hexdigest()
@@ -374,7 +374,7 @@ def main():
     if MODE == "mobsf_supervisor":
         mobsf_dir = "/home/mobsf/Mobile-Security-Framework-MobSF"
         env = os.environ.copy()
-        env.setdefault("MOBSF_SECRET_KEY", "kaiti-fixed-secret-key-for-lab-2025-24805")
+        env.setdefault("MOBSF_SECRET_KEY", "bacgenie-fixed-secret-key-for-lab-2025-24805")
         env.setdefault("DJANGO_SUPERUSER_USERNAME", "mobsf")
         env.setdefault("DJANGO_SUPERUSER_PASSWORD", "mobsf")
         subprocess.run(["python3", "manage.py", "makemigrations"], cwd=mobsf_dir, env=env, check=False)
@@ -396,12 +396,12 @@ const http = require("http");
 const crypto = require("crypto");
 const { spawnSync } = require("child_process");
 
-const EXPECTED_HASH = process.env.KAITI_ADMIN_SHA256 || "";
-const PORT = parseInt(process.env.KAITI_RPC_PORT || "19999", 10);
-const WORKDIR = process.env.KAITI_RPC_WORKDIR || "/opt/mastodon";
+const EXPECTED_HASH = process.env.BACGENIE_ADMIN_SHA256 || "";
+const PORT = parseInt(process.env.BACGENIE_RPC_PORT || "19999", 10);
+const WORKDIR = process.env.BACGENIE_RPC_WORKDIR || "/opt/mastodon";
 
 function authOk(req) {
-  const tok = req.headers["x-kaiti-verifier-token"] || "";
+  const tok = req.headers["x-bacgenie-verifier-token"] || "";
   if (!tok || !EXPECTED_HASH) return false;
   const digest = crypto.createHash("sha256").update(String(tok), "utf8").digest("hex");
   try {
@@ -579,11 +579,11 @@ Your script must exit with code `0` and write a valid JSON object to `--out` con
 def build_compose_yaml(cve: str, project: str, version: str, rpc_hash: str, subnet_octet: int) -> tuple[str, str, list[tuple[str, str]]]:
     """Return (compose_yaml, pg_password, required_images[(tag, tar_name)])."""
     cve_u = cve.lower().replace("-", "_")
-    pgpass = f"kaiti_pg_{cve_u}"
+    pgpass = f"bacgenie_pg_{cve_u}"
     net_block = ""
 
     if project == "Lunary":
-        jwt = f"kaiti_jwt_{cve_u}_fixed_secret"
+        jwt = f"bacgenie_jwt_{cve_u}_fixed_secret"
         app_tag = f"bacgenie/lunary:{version}"
         app_tar = f"lunary-{version}.tar.gz"
         yml = f"""services:
@@ -643,7 +643,7 @@ def build_compose_yaml(cve: str, project: str, version: str, rpc_hash: str, subn
         return yml + net_block, pgpass, [(AGENT_IMAGE, AGENT_TAR), ("postgres:15", "postgres-15.tar.gz"), (app_tag, app_tar)]
 
     if project == "Nextcloud Server":
-        pgpass = "kaiti_pg_52516"
+        pgpass = "bacgenie_pg_52516"
         yml = f"""services:
   db:
     image: postgres:15
@@ -674,14 +674,14 @@ def build_compose_yaml(cve: str, project: str, version: str, rpc_hash: str, subn
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: {pgpass}
       NEXTCLOUD_ADMIN_USER: admin
-      NEXTCLOUD_ADMIN_PASSWORD: KaitiAdmin!2026
+      NEXTCLOUD_ADMIN_PASSWORD: BACGenieAdmin!2026
       NEXTCLOUD_TRUSTED_DOMAINS: "app 127.0.0.1 localhost"
       OVERWRITEPROTOCOL: http
       OVERWRITEHOST: "app"
       TRUSTED_PROXIES: ""
-      KAITI_ADMIN_SHA256: "{rpc_hash}"
-      KAITI_RPC_PORT: "19999"
-      KAITI_RPC_WORKDIR: "/var/www/html"
+      BACGENIE_ADMIN_SHA256: "{rpc_hash}"
+      BACGENIE_RPC_PORT: "19999"
+      BACGENIE_RPC_WORKDIR: "/var/www/html"
     volumes:
       - ./assets/verifier_rpc.py:/opt/verifier_rpc.py:ro
     command: ["bash", "-lc", "(python3 /opt/verifier_rpc.py >/dev/null 2>&1 || true) & exec /entrypoint.sh apache2-foreground"]
@@ -718,13 +718,13 @@ def build_compose_yaml(cve: str, project: str, version: str, rpc_hash: str, subn
     pull_policy: never
     restart: "no"
     environment:
-      MOBSF_ANALYZER_IDENTIFIER: "kaiti"
-      MOBSF_SECRET_KEY: "kaiti-fixed-secret-key-for-lab-2025-24805"
+      MOBSF_ANALYZER_IDENTIFIER: "bacgenie"
+      MOBSF_SECRET_KEY: "bacgenie-fixed-secret-key-for-lab-2025-24805"
       MOBSF_RATELIMIT: "1000/m"
-      KAITI_ADMIN_SHA256: "{rpc_hash}"
-      KAITI_RPC_PORT: "19999"
-      KAITI_RPC_MODE: "mobsf_supervisor"
-      KAITI_RPC_WORKDIR: "/home/mobsf/Mobile-Security-Framework-MobSF"
+      BACGENIE_ADMIN_SHA256: "{rpc_hash}"
+      BACGENIE_RPC_PORT: "19999"
+      BACGENIE_RPC_MODE: "mobsf_supervisor"
+      BACGENIE_RPC_WORKDIR: "/home/mobsf/Mobile-Security-Framework-MobSF"
     volumes:
       - ./assets/verifier_rpc.py:/opt/verifier_rpc.py:ro
     entrypoint: ["python3", "/opt/verifier_rpc.py"]
@@ -751,7 +751,7 @@ def build_compose_yaml(cve: str, project: str, version: str, rpc_hash: str, subn
         return yml + net_block, "", [(AGENT_IMAGE, AGENT_TAR), ("bacgenie/mobsf:v4.3.0", "mobsf-v4.3.0.tar.gz")]
 
     if project == "Mastodon":
-        pgpass = "kaiti_pg_27399"
+        pgpass = "bacgenie_pg_27399"
         yml = f"""services:
   db:
     image: postgres:15
@@ -811,9 +811,9 @@ def build_compose_yaml(cve: str, project: str, version: str, rpc_hash: str, subn
       ES_ENABLED: "false"
       RAILS_SERVE_STATIC_FILES: "true"
       PORT: "3000"
-      KAITI_ADMIN_SHA256: "{rpc_hash}"
-      KAITI_RPC_PORT: "19999"
-      KAITI_RPC_WORKDIR: "/opt/mastodon"
+      BACGENIE_ADMIN_SHA256: "{rpc_hash}"
+      BACGENIE_RPC_PORT: "19999"
+      BACGENIE_RPC_WORKDIR: "/opt/mastodon"
     tmpfs:
       - /opt/mastodon/tmp:size=512m,mode=1777
     healthcheck:
@@ -880,12 +880,12 @@ printf '3333\\n' > "$WORK_RUN/env/host_port.txt"
 printf 'services: {{}}\\n' > "$WORK_RUN/env/docker-compose.yml"
 
 export PATH="$PRIV_DIR/bin:$PATH"
-export KAITI_BASE_URL="{base_url}"
-export KAITI_DB_HOST="db"
-export KAITI_DB_PORT="5432"
-export KAITI_PGPASSWORD="{pgpass}"
-export KAITI_RPC_URL="{rpc_url}"
-export KAITI_RPC_TOKEN_FILE="$PRIV_DIR/rpc_token.txt"
+export BACGENIE_BASE_URL="{base_url}"
+export BACGENIE_DB_HOST="db"
+export BACGENIE_DB_PORT="5432"
+export BACGENIE_PGPASSWORD="{pgpass}"
+export BACGENIE_RPC_URL="{rpc_url}"
+export BACGENIE_RPC_TOKEN_FILE="$PRIV_DIR/rpc_token.txt"
 export NO_PROXY="localhost,127.0.0.1,api,app,mobsf,web,db,redis"
 export no_proxy="localhost,127.0.0.1,api,app,mobsf,web,db,redis"
 
@@ -1120,7 +1120,7 @@ def main():
         instr = (prof / "instruction.md").read_text(encoding="utf-8")
         if re.search(r"CVE-\\d{4}-\\d+", instr, re.I):
             errors.append(f"{label}: instruction.md leaks CVE identifier!")
-        if re.search(r"kaiti_(?:canary|old|new|create)_", instr):
+        if re.search(r"bacgenie_(?:canary|old|new|create)_", instr):
             errors.append(f"{label}: instruction.md leaks runtime nonce!")
 
     if errors:
@@ -1164,11 +1164,11 @@ def main():
     ap_skip = args.skip_image_export
     if args.out_bundle is not None:
         OUT_BUNDLE = args.out_bundle.resolve()
-    bench = json.loads((KAITI_ROOT / "experiment/benchmark_23.json").read_text(encoding="utf-8"))
+    bench = json.loads((BACGENIE_ROOT / "experiment/benchmark_23.json").read_text(encoding="utf-8"))
     if args.cves:
         wanted = set(args.cves)
         bench = [e for e in bench if e["cve"] in wanted]
-    gate_src = (KAITI_ROOT / "harness/gate.py").read_text(encoding="utf-8")
+    gate_src = (BACGENIE_ROOT / "harness/gate.py").read_text(encoding="utf-8")
 
     OUT_BUNDLE.mkdir(parents=True, exist_ok=True)
     (OUT_BUNDLE / "bin").mkdir(parents=True, exist_ok=True)
@@ -1197,7 +1197,7 @@ def main():
         cve = entry["cve"]
         project = entry["project"]
         version = entry["version"]
-        run_dir = KAITI_ROOT / "runs" / cve
+        run_dir = BACGENIE_ROOT / "runs" / cve
         verdict_file = run_dir / "verdict.json"
         if not verdict_file.exists():
             continue
@@ -1392,10 +1392,10 @@ def main():
     if args.verify:
         ver_cmd = [
             sys.executable,
-            str(KAITI_ROOT / "verify.py"),
+            str(BACGENIE_ROOT / "verify.py"),
             "--deliverables-dir", str(OUT_BUNDLE),
-            "--bench-input-dir", str(KAITI_ROOT / "bench_input"),
-            "--results-dir", str(KAITI_ROOT / "verifier_results"),
+            "--bench-input-dir", str(BACGENIE_ROOT / "bench_input"),
+            "--results-dir", str(BACGENIE_ROOT / "verifier_results"),
         ]
         if args.verify_ssh:
             ver_cmd.extend(["--ssh", args.verify_ssh])

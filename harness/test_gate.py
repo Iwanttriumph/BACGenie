@@ -144,7 +144,7 @@ elif a.phase == "after":
     }}))
 """)
 
-            # Exploit also verifies that no kaiti_gate_* private files exist anywhere on disk!
+            # Exploit also verifies that no bacgenie_gate_* private files exist anywhere on disk!
             write_text(rdir / "exploit.py", """
 import argparse, glob, json, os, tempfile
 from pathlib import Path
@@ -153,7 +153,7 @@ p.add_argument("--public-in", required=True)
 p.add_argument("--out", required=True)
 a = p.parse_args()
 pub = json.loads(Path(a.public_in).read_text())
-leaked = glob.glob(os.path.join(tempfile.gettempdir(), "kaiti_gate_*", "*.json"))
+leaked = glob.glob(os.path.join(tempfile.gettempdir(), "bacgenie_gate_*", "*.json"))
 assert len(leaked) == 0, f"Air-gap broken! Found files: {leaked}"
 st_path = Path(pub["state_path_sim"])
 st = json.loads(st_path.read_text())
