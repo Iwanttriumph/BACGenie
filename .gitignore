@@ -3,10 +3,16 @@ __pycache__/
 *.py[cod]
 .env
 .env.*
+.opencode-runtime/
+runs/
+deliverables/
+verifier_results/
+experiment/runtime/
+experiment/logs/
 /project/
 experiments/
+/results - bench/
 /trigger pattern输出/
 results/**/llm_response.json
 results - v2/**/llm_response.json
-
 **/oracle_llm_response.json

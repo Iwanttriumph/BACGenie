@@ -1,0 +1,302 @@
+[
+  {
+    "cve": "CVE-2024-10273",
+    "project": "Lunary",
+    "version": "v1.5.6",
+    "cwe": [
+      "CWE-863"
+    ],
+    "repo_zip": "https://github.com/lunary-ai/lunary/archive/refs/tags/v1.5.6.zip",
+    "patch_commits": [
+      "https://github.com/lunary-ai/lunary/commit/8ba1b8ba2c2c30b1cec30eb5777c1fda670cbbfc"
+    ],
+    "description": "In lunary-ai/lunary v1.5.0, improper privilege management in the models.ts file allows users with viewer roles to modify models owned by others. The PATCH endpoint for models does not have appropriate privilege checks, enabling low-privilege users to update models they should not have access to modify. This vulnerability could lead to unauthorized changes in critical resources, affecting the integrity and reliability of the system."
+  },
+  {
+    "cve": "CVE-2024-52516",
+    "project": "Nextcloud Server",
+    "version": "v28.0.0",
+    "cwe": [
+      "CWE-269"
+    ],
+    "repo_zip": "https://github.com/nextcloud/server/archive/refs/tags/v28.0.0.zip",
+    "patch_commits": [
+      "https://github.com/nextcloud/server/commit/142b6e313ffa9d3b950bcd23cb58850d3ae7cf34"
+    ],
+    "description": "Nextcloud Server is a self hosted personal cloud system. When a server is configured to only allow sharing with users that are in ones own groups, after a user was removed from a group, previously shared items were not unshared. It is recommended that the Nextcloud Server is upgraded to 22.2.11 or 23.0.11 or 24.0.6 and Nextcloud Enterprise Server is upgraded to 22.2.11 or 23.0.11 or 24.0.6."
+  },
+  {
+    "cve": "CVE-2024-7473",
+    "project": "Lunary",
+    "version": "v1.4.3-alpha.2",
+    "cwe": [
+      "CWE-639"
+    ],
+    "repo_zip": "https://github.com/lunary-ai/lunary/archive/refs/tags/v1.4.3-alpha.2.zip",
+    "patch_commits": [
+      "https://github.com/lunary-ai/lunary/commit/88b55b01fcbab0fbbc5b8032a38d0345af98ecfa"
+    ],
+    "description": "An IDOR vulnerability exists in the 'Evaluations' function of the 'umgws datasets' section in lunary-ai/lunary versions 1.3.2. This vulnerability allows an authenticated user to update other users' prompts by manipulating the 'id' parameter in the request. The issue is fixed in version 1.4.3."
+  },
+  {
+    "cve": "CVE-2024-10330",
+    "project": "Lunary",
+    "version": "v1.5.6",
+    "cwe": [
+      "CWE-862"
+    ],
+    "repo_zip": "https://github.com/lunary-ai/lunary/archive/refs/tags/v1.5.6.zip",
+    "patch_commits": [
+      "https://github.com/lunary-ai/lunary/commit/8ba1b8ba2c2c30b1cec30eb5777c1fda670cbbfc"
+    ],
+    "description": "In lunary-ai/lunary version 1.5.6, the `/v1/evaluators/` endpoint lacks proper access control, allowing any user associated with a project to fetch all evaluator data regardless of their role. This vulnerability permits low-privilege users to access potentially sensitive evaluation data."
+  },
+  {
+    "cve": "CVE-2024-11137",
+    "project": "Lunary",
+    "version": "v1.6.0",
+    "cwe": [
+      "CWE-639"
+    ],
+    "repo_zip": "https://github.com/lunary-ai/lunary/archive/refs/tags/v1.6.0.zip",
+    "patch_commits": [
+      "https://github.com/lunary-ai/lunary/commit/ded72a95c220904a151d27daf3c67e8644e386c6"
+    ],
+    "description": "An Insecure Direct Object Reference (IDOR) vulnerability exists in the `PATCH /v1/runs/:id/score` endpoint of lunary-ai/lunary version 1.6.0. This vulnerability allows an attacker to update the score data of any run by manipulating the id parameter in the request URL, which corresponds to the `runId_score` in the database. The endpoint does not sufficiently validate whether the authenticated user has permission to modify the specified runId, enabling an attacker with a valid account to modify other users' runId scores by specifying different id values. This issue was fixed in version 1.6.1."
+  },
+  {
+    "cve": "CVE-2024-3504",
+    "project": "Lunary",
+    "version": "v1.2.6",
+    "cwe": [
+      "CWE-863"
+    ],
+    "repo_zip": "https://github.com/lunary-ai/lunary/archive/refs/tags/v1.2.6.zip",
+    "patch_commits": [
+      "https://github.com/lunary-ai/lunary/commit/f7507f0949f6634f725ebb8da37c44f76542901f"
+    ],
+    "description": "An improper access control vulnerability exists in lunary-ai/lunary versions up to and including 1.2.2, where an admin can update any organization user to the organization owner. This vulnerability allows the elevated user to delete projects within the organization. The issue is resolved in version 1.2.7."
+  },
+  {
+    "cve": "CVE-2024-5126",
+    "project": "Lunary",
+    "version": "v1.2.24",
+    "cwe": [
+      "CWE-862"
+    ],
+    "repo_zip": "https://github.com/lunary-ai/lunary/archive/refs/tags/v1.2.24.zip",
+    "patch_commits": [
+      "https://github.com/lunary-ai/lunary/commit/b7bd3a830a0f47ba07d0fd57bf78c4dd8a216297"
+    ],
+    "description": "An improper access control vulnerability exists in the lunary-ai/lunary repository, specifically within the versions.patch functionality for updating prompts. Affected versions include 1.2.2 up to but not including 1.2.25. The vulnerability allows unauthorized users to update prompt details due to insufficient access control checks. This issue was addressed and fixed in version 1.2.25."
+  },
+  {
+    "cve": "CVE-2024-5127",
+    "project": "Lunary",
+    "version": "v1.2.24",
+    "cwe": [
+      "CWE-862"
+    ],
+    "repo_zip": "https://github.com/lunary-ai/lunary/archive/refs/tags/v1.2.24.zip",
+    "patch_commits": [
+      "https://github.com/lunary-ai/lunary/commit/b7bd3a830a0f47ba07d0fd57bf78c4dd8a216297"
+    ],
+    "description": "In lunary-ai/lunary versions 1.2.2 through 1.2.25, an improper access control vulnerability allows users on the Free plan to invite other members and assign them any role, including those intended for Paid and Enterprise plans only. This issue arises due to insufficient backend validation of roles and permissions, enabling unauthorized users to join a project and potentially exploit roles and permissions not intended for their use. The vulnerability specifically affects the Team feature, where the backend fails to validate whether a user has paid for a plan before allowing them to send invite links with any role assigned. This could lead to unauthorized access and manipulation of project settings or data."
+  },
+  {
+    "cve": "CVE-2024-9098",
+    "project": "Lunary",
+    "version": "v1.4.29",
+    "cwe": [
+      "CWE-863"
+    ],
+    "repo_zip": "https://github.com/lunary-ai/lunary/archive/refs/tags/v1.4.29.zip",
+    "patch_commits": [
+      "https://github.com/lunary-ai/lunary/commit/a8d7b2959e87c30fbafdb12af7ffa093385dcc60"
+    ],
+    "description": "In lunary-ai/lunary before version 1.4.30, a privilege escalation vulnerability exists where admins can invite new members with billing permissions, thereby gaining unauthorized access to billing resources. This issue arises because the user creation endpoint does not restrict admins from inviting users with billing roles. As a result, admins can circumvent the intended access control, posing a risk to the organization's financial resources."
+  },
+  {
+    "cve": "CVE-2024-9096",
+    "project": "Lunary",
+    "version": "v1.4.29",
+    "cwe": [
+      "CWE-862"
+    ],
+    "repo_zip": "https://github.com/lunary-ai/lunary/archive/refs/tags/v1.4.29.zip",
+    "patch_commits": [
+      "https://github.com/lunary-ai/lunary/commit/a8d7b2959e87c30fbafdb12af7ffa093385dcc60"
+    ],
+    "description": "In lunary-ai/lunary version 1.4.28, the /checklists/:id route allows low-privilege users to modify checklists by sending a PATCH request. The route lacks proper access control, such as middleware to ensure that only authorized users (e.g., project owners or admins) can modify checklist data. This vulnerability allows any user associated with the project, regardless of their role, to modify checklists, including changing the slug or data fields, which can lead to tampering with essential project workflows, altering business logic, and introducing errors that undermine integrity."
+  },
+  {
+    "cve": "CVE-2024-4146",
+    "project": "Lunary",
+    "version": "v1.2.25",
+    "cwe": [
+      "CWE-863"
+    ],
+    "repo_zip": "https://github.com/lunary-ai/lunary/archive/refs/tags/v1.2.25.zip",
+    "patch_commits": [
+      "https://github.com/lunary-ai/lunary/commit/c43b6c62035f32ca455f66d5fd22ba661648cde7"
+    ],
+    "description": "In lunary-ai/lunary version v1.2.13, an incorrect authorization vulnerability exists that allows unauthorized users to access and manipulate projects within an organization they should not have access to. Specifically, the vulnerability is located in the `checkProjectAccess` method within the authorization middleware, which fails to adequately verify if a user has the correct permissions to access a specific project. Instead, it only checks if the user is part of the organization owning the project, overlooking the necessary check against the `account_project` table for explicit project access rights. This flaw enables attackers to gain complete control over all resources within a project, including the ability to create, update, read, and delete any resource, compromising the privacy and security of sensitive information."
+  },
+  {
+    "cve": "CVE-2025-24805",
+    "project": "MobSF",
+    "version": "v4.3.0",
+    "cwe": [
+      "CWE-269"
+    ],
+    "repo_zip": "https://github.com/MobSF/Mobile-Security-Framework-MobSF/archive/refs/tags/v4.3.0.zip",
+    "patch_commits": [
+      "https://github.com/MobSF/Mobile-Security-Framework-MobSF/commit/05206e72cae35b311615a70e51e1a946955c5e83"
+    ],
+    "description": "Mobile Security Framework (MobSF) is an automated, all-in-one mobile application (Android/iOS/Windows) pen-testing, malware analysis and security assessment framework. A local user with minimal privileges is able to make use of an access token for materials for scopes which it should not be accepted. This issue has been addressed in version 4.3.1 and all users are advised to upgrade. There are no known workarounds for this vulnerability."
+  },
+  {
+    "cve": "CVE-2024-10275",
+    "project": "Lunary",
+    "version": "v1.5.6",
+    "cwe": [
+      "CWE-863"
+    ],
+    "repo_zip": "https://github.com/lunary-ai/lunary/archive/refs/tags/v1.5.6.zip",
+    "patch_commits": [
+      "https://github.com/lunary-ai/lunary/commit/8ba1b8ba2c2c30b1cec30eb5777c1fda670cbbfc"
+    ],
+    "description": "In version 1.5.5 of lunary-ai/lunary, a vulnerability exists where admins, who do not have direct permissions to access billing resources, can change the permissions of existing users to include billing permissions. This can lead to a privilege escalation scenario where an administrator can manage billing, effectively bypassing the intended role-based access control. Only users with the 'owner' role should be allowed to invite members with billing permissions. This flaw allows admins to circumvent those restrictions, gaining unauthorized access and control over billing information, posing a risk to the organization’s financial resources."
+  },
+  {
+    "cve": "CVE-2024-11300",
+    "project": "Lunary",
+    "version": "v1.6.2",
+    "cwe": [
+      "CWE-639"
+    ],
+    "repo_zip": "https://github.com/lunary-ai/lunary/archive/refs/tags/v1.6.2.zip",
+    "patch_commits": [
+      "https://github.com/lunary-ai/lunary/commit/79dc370596d979b756f6ea0250d97a2d02385ecd"
+    ],
+    "description": "In lunary-ai/lunary before version 1.6.3, an improper access control vulnerability exists where a user can access prompt data of another user. This issue affects version 1.6.2 and the main branch. The vulnerability allows unauthorized users to view sensitive prompt data by accessing specific URLs, leading to potential exposure of critical information."
+  },
+  {
+    "cve": "CVE-2024-5128",
+    "project": "Lunary",
+    "version": "v1.2.24",
+    "cwe": [
+      "CWE-639"
+    ],
+    "repo_zip": "https://github.com/lunary-ai/lunary/archive/refs/tags/v1.2.24.zip",
+    "patch_commits": [
+      "https://github.com/lunary-ai/lunary/commit/0755dde1afc2a74ec23b55eee03e4416916cf48f"
+    ],
+    "description": "An Insecure Direct Object Reference (IDOR) vulnerability was identified in lunary-ai/lunary, affecting versions up to and including 1.2.2. This vulnerability allows unauthorized users to view, update, or delete any dataset_prompt or dataset_prompt_variation within any dataset or project. The issue stems from improper access control checks in the dataset management endpoints, where direct references to object IDs are not adequately secured against unauthorized access. This vulnerability was fixed in version 1.2.25."
+  },
+  {
+    "cve": "CVE-2024-5131",
+    "project": "Lunary",
+    "version": "v1.2.24",
+    "cwe": [
+      "CWE-639"
+    ],
+    "repo_zip": "https://github.com/lunary-ai/lunary/archive/refs/tags/v1.2.24.zip",
+    "patch_commits": [
+      "https://github.com/lunary-ai/lunary/commit/ddfd497afd017a6946c582a1a806687fdac888bf"
+    ],
+    "description": "An Improper Access Control vulnerability exists in the lunary-ai/lunary repository, affecting versions up to and including 1.2.2. The vulnerability allows unauthorized users to view any prompts in any projects by supplying a specific prompt ID to an endpoint that does not adequately verify the ownership of the prompt ID. This issue was fixed in version 1.2.25."
+  },
+  {
+    "cve": "CVE-2024-7475",
+    "project": "Lunary",
+    "version": "v1.3.4-alpha.1",
+    "cwe": [
+      "CWE-862"
+    ],
+    "repo_zip": "https://github.com/lunary-ai/lunary/archive/refs/tags/v1.3.4-alpha.1.zip",
+    "patch_commits": [
+      "https://github.com/lunary-ai/lunary/commit/8f563c77d8614a72980113f530c7a9ec15a5f8d5"
+    ],
+    "description": "An improper access control vulnerability in lunary-ai/lunary version 1.3.2 allows an attacker to update the SAML configuration without authorization. This vulnerability can lead to manipulation of authentication processes, fraudulent login requests, and theft of user information. Appropriate access controls should be implemented to ensure that the SAML configuration can only be updated by authorized users."
+  },
+  {
+    "cve": "CVE-2024-10274",
+    "project": "Lunary",
+    "version": "v1.5.6",
+    "cwe": [
+      "CWE-862"
+    ],
+    "repo_zip": "https://github.com/lunary-ai/lunary/archive/refs/tags/v1.5.6.zip",
+    "patch_commits": [
+      "https://github.com/lunary-ai/lunary/commit/8ba1b8ba2c2c30b1cec30eb5777c1fda670cbbfc"
+    ],
+    "description": "An improper authorization vulnerability exists in lunary-ai/lunary version 1.5.5. The /users/me/org endpoint lacks adequate access control mechanisms, allowing unauthorized users to access sensitive information about all team members in the current organization. This vulnerability can lead to the disclosure of sensitive information such as names, roles, or emails to users without sufficient privileges, resulting in privacy violations and potential reconnaissance for targeted attacks."
+  },
+  {
+    "cve": "CVE-2024-9000",
+    "project": "Lunary",
+    "version": "v1.4.25",
+    "cwe": [
+      "CWE-862"
+    ],
+    "repo_zip": "https://github.com/lunary-ai/lunary/archive/refs/tags/v1.4.25.zip",
+    "patch_commits": [
+      "https://github.com/lunary-ai/lunary/commit/a02861ef9bb6ce860a35f7b8f178d58859cd85f0"
+    ],
+    "description": "In lunary-ai/lunary before version 1.4.26, the checklists.post() endpoint allows users to create or modify checklists without validating whether the user has proper permissions. This missing access control permits unauthorized users to create checklists, bypassing intended permission checks. Additionally, the endpoint does not validate the uniqueness of the slug field when creating a new checklist, allowing an attacker to spoof existing checklists by reusing the slug of an already-existing checklist. This can lead to significant data integrity issues, as legitimate checklists can be replaced with malicious or altered data."
+  },
+  {
+    "cve": "CVE-2024-9095",
+    "project": "Lunary",
+    "version": "v1.4.29",
+    "cwe": [
+      "CWE-862"
+    ],
+    "repo_zip": "https://github.com/lunary-ai/lunary/archive/refs/tags/v1.4.29.zip",
+    "patch_commits": [
+      "https://github.com/lunary-ai/lunary/commit/a8d7b2959e87c30fbafdb12af7ffa093385dcc60"
+    ],
+    "description": "In lunary-ai/lunary version v1.4.28, the /bigquery API route lacks proper access control, allowing any logged-in user to create a Datastream to Google BigQuery and export the entire database. This includes sensitive data such as password hashes and secret API keys. The route is protected by a config check (`config.DATA_WAREHOUSE_EXPORTS_ALLOWED`), but it does not verify the user's access level or implement any access control middleware. This vulnerability can lead to the extraction of sensitive data, disruption of services, credential compromise, and service integrity breaches."
+  },
+  {
+    "cve": "CVE-2025-27399",
+    "project": "Mastodon",
+    "version": "v4.1.22",
+    "cwe": [
+      "CWE-200",
+      "CWE-285"
+    ],
+    "repo_zip": "https://github.com/mastodon/mastodon/archive/refs/tags/v4.1.22.zip",
+    "patch_commits": [
+      "https://github.com/mastodon/mastodon/commit/6b519cfefa93a923b19d0f20c292c7185f8fd5f5"
+    ],
+    "description": "Mastodon is a self-hosted, federated microblogging platform. In versions prior to 4.1.23, 4.2.16, and 4.3.4, when the visibility for domain blocks/reasons is set to \"users\" (localized English string: \"To logged-in users\"), users that are not yet approved can view the block reasons. Instance admins that do not want their domain blocks to be public are impacted. Versions 4.1.23, 4.2.16, and 4.3.4 fix the issue."
+  },
+  {
+    "cve": "CVE-2025-27507",
+    "project": "ZITADEL",
+    "version": "v2.63.0-rc.1",
+    "cwe": [
+      "CWE-639"
+    ],
+    "repo_zip": "https://github.com/zitadel/zitadel/archive/refs/tags/v2.63.0-rc.1.zip",
+    "patch_commits": [
+      "https://github.com/zitadel/zitadel/commit/d9d8339813f1c43d3eb7d8d80f11fdabb2fd2ee4"
+    ],
+    "description": "The open-source identity infrastructure software Zitadel allows administrators to disable the user self-registration. ZITADEL's Admin API contains Insecure Direct Object Reference (IDOR) vulnerabilities that allow authenticated users, without specific IAM roles, to modify sensitive settings. While several endpoints are affected, the most critical vulnerability lies in the ability to manipulate LDAP configurations. Customers who do not utilize LDAP for authentication are not at risk from the most severe aspects of this vulnerability. However, upgrading to the patched version to address all identified issues is strongly recommended. This vulnerability is fixed in 2.71.0, 2.70.1, ,2.69.4, 2.68.4, 2.67.8, 2.66.11, 2.65.6, 2.64.5, and 2.63.8."
+  },
+  {
+    "cve": "CVE-2024-52584",
+    "project": "Autolab",
+    "version": "v3.0.1",
+    "cwe": [
+      "CWE-863"
+    ],
+    "repo_zip": "https://github.com/autolab/Autolab/archive/refs/tags/v3.0.1.zip",
+    "patch_commits": [
+      "https://github.com/autolab/Autolab/commit/96006d532a392eeca2d350d1811f8e8ab9625bda"
+    ],
+    "description": "Autolab is a course management service that enables auto-graded programming assignments. There is a vulnerability in version 3.0.1 where CAs can view or edit the grade for any submission ID, even if they are not a CA for the class that has the submission. The endpoints only check that the CAs have the authorization level of a CA in the class in the endpoint, which is not necessarily the class the submission is attached to. Version 3.0.2 contains a patch. No known workarounds are available."
+  }
+]

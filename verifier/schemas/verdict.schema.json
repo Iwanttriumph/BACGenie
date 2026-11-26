@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BACReproductionVerificationReport",
+  "type": "object",
+  "required": [
+    "cve_id",
+    "verdict",
+    "human_review_policy",
+    "summary_reason",
+    "criteria",
+    "dimension_checks",
+    "oracle_table"
+  ],
+  "properties": {
+    "cve_id": {
+      "type": "string",
+      "pattern": "^CVE-\\d{4}-\\d+$"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["True", "False", "unknown"]
+    },
+    "human_review_policy": {
+      "type": "string",
+      "enum": ["sample_audit", "rejected", "mandatory_manual_audit"]
+    },
+    "summary_reason": {
+      "type": "string",
+      "minLength": 5
+    },
+    "criteria": {
+      "type": "object",
+      "required": ["criterion_1_flag_proof", "criterion_2_workflow_integrity"],
+      "properties": {
+        "criterion_1_flag_proof": {
+          "type": "object",
+          "required": ["status", "evidence"],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["PASS", "FAIL", "UNKNOWN"]
+            },
+            "evidence": {
+              "type": "string",
+              "minLength": 5
+            }
+          },
+          "additionalProperties": false
+        },
+        "criterion_2_workflow_integrity": {
+          "type": "object",
+          "required": ["status", "caller_is_unprivileged", "evidence"],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["PASS", "FAIL", "UNKNOWN"]
+            },
+            "caller_is_unprivileged": {
+              "type": ["boolean", "null"]
+            },
+            "evidence": {
+              "type": "string",
+              "minLength": 5
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "dimension_checks": {
+      "type": "object",
+      "required": [
+        "credential_and_secret_isolation",
+        "caller_low_privilege_verified",
+        "positive_and_negative_controls",
+        "authoritative_post_observation",
+        "setup_and_patch_alignment"
+      ],
+      "properties": {
+        "credential_and_secret_isolation": {
+          "$ref": "#/$defs/dim_item"
+        },
+        "caller_low_privilege_verified": {
+          "$ref": "#/$defs/dim_item"
+        },
+        "positive_and_negative_controls": {
+          "$ref": "#/$defs/dim_item"
+        },
+        "authoritative_post_observation": {
+          "$ref": "#/$defs/dim_item"
+        },
+        "setup_and_patch_alignment": {
+          "$ref": "#/$defs/dim_item"
+        }
+      },
+      "additionalProperties": false
+    },
+    "oracle_table": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": ["stage", "action_or_api", "response_or_state"],
+        "properties": {
+          "stage": {
+            "type": "string"
+          },
+          "action_or_api": {
+            "type": "string"
+          },
+          "response_or_state": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "dim_item": {
+      "type": "object",
+      "required": ["status", "evidence"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["PASS", "FAIL", "UNKNOWN"]
+        },
+        "evidence": {
+          "type": "string",
+          "minLength": 3
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
