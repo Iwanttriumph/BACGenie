@@ -52,7 +52,7 @@ permissions:
 ## 二、 开工准备与技能加载
 
 收到用户的 CVE 复现任务后：
-1. 先加载技能 `bac-trigger-and-oracle`（掌握 TP1–TP5 与 O1/O2/O3 × CRUD 契约准则）；检查仓库内（如 `bench_input/<CVE-ID>.json）是否已有该 CVE 的初始公告/补丁材料。
+1. 先加载技能 `bac-trigger-and-oracle`（掌握 TP1–TP5 与 O1/O2/O3 × CRUD 契约准则）；查阅 `experiment/benchmark_23.json` 或本地源码缓存中该 CVE 的初始描述与补丁信息。
 2. 初始化 `runs/<CVE-ID>/00_ledger.md`，记录初始已知信息与待验证问题。
 
 ---

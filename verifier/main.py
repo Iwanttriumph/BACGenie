@@ -2,20 +2,20 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from verifier.agents.repro_auditor import audit_cve_reproduction
 from verifier.config import (
     DEFAULT_BASE_URL,
-    DEFAULT_BENCH_INPUT_DIR,
+    DEFAULT_BENCHMARK_FILE,
     DEFAULT_LOCAL_DELIVERABLES,
     DEFAULT_MODEL,
     DEFAULT_REMOTE_DELIVERABLES,
     DEFAULT_RESULTS_DIR,
     DEFAULT_SAMPLE_RATE,
     DEFAULT_SAMPLE_SEED,
+    ROOT_DIR,
 )
 from verifier.reporting.report_builder import (
     atomic_write_json,
@@ -27,35 +27,76 @@ from verifier.sandbox.runner import run_two_container_batch
 from verifier.toolbox.llm_client import LLMClient, resolve_api_key
 
 
-def load_benchmark_inputs(bench_dir: Optional[Path]) -> Dict[str, Tuple[Dict[str, Any], Optional[Path]]]:
-    """Load CVE-*.json files from bench_input directory and resolve local repo_path if present."""
+def _resolve_cached_source_dir(entry: Dict[str, Any], source_root: Optional[Path]) -> Optional[Path]:
+    if source_root is None or not source_root.is_dir():
+        return None
+    cve_id = str(entry.get("cve") or "")
+    project = str(entry.get("project") or "")
+    ver = str(entry.get("version") or "")
+    prefix_map = {
+        "Lunary": f"Lunary_{ver}",
+        "MobSF": f"MobSF_{ver}",
+        "Nextcloud Server": f"Nextcloud_{ver}",
+        "Mastodon": f"Mastodon_{ver}",
+        "ZITADEL": f"ZITADEL_{ver}",
+        "Autolab": f"Autolab_{ver}",
+    }
+    folder_name = prefix_map.get(project)
+    if folder_name and (source_root / folder_name).is_dir():
+        return (source_root / folder_name).resolve()
+    if cve_id and (source_root / cve_id).is_dir():
+        subs = [d for d in (source_root / cve_id).iterdir() if d.is_dir()]
+        return subs[0].resolve() if len(subs) == 1 else (source_root / cve_id).resolve()
+    return None
+
+
+def load_benchmark_catalog(
+    benchmark_file: Optional[Path],
+    source_cache_dir: Optional[Path] = None,
+) -> Dict[str, Tuple[Dict[str, Any], Optional[Path]]]:
+    """Load CVE metadata from experiment/benchmark_23.json (and resolve optional local source cache)."""
     catalog: Dict[str, Tuple[Dict[str, Any], Optional[Path]]] = {}
-    if bench_dir is None or not bench_dir.is_dir():
+    if benchmark_file is None or not benchmark_file.is_file():
         return catalog
-    for fp in sorted(bench_dir.glob("CVE-*.json")):
-        cve_id = fp.stem
-        data = json.loads(fp.read_text(encoding="utf-8"))
-        raw_repo = data.get("repo_path")
-        repo_path: Optional[Path] = None
-        if isinstance(raw_repo, str) and raw_repo.strip():
-            cand = Path(raw_repo.strip())
-            if not cand.is_absolute():
-                cand = (fp.parent / cand).resolve()
-            if cand.is_dir():
-                repo_path = cand
-        catalog[cve_id] = (data, repo_path)
+
+    default_cache = source_cache_dir or (ROOT_DIR / "bench_cache" / "sources")
+    entries = json.loads(benchmark_file.read_text(encoding="utf-8"))
+    if not isinstance(entries, list):
+        return catalog
+
+    for item in entries:
+        if not isinstance(item, dict) or not item.get("cve"):
+            continue
+        cve_id = str(item["cve"])
+        normalized = {
+            "cve_id": cve_id,
+            "project": item.get("project", ""),
+            "sw_version": item.get("version", ""),
+            "cwes": item.get("cwe", []),
+            "patch_commits": item.get("patch_commits", []),
+            "description": item.get("description", ""),
+            "sec_adv": [],
+        }
+        repo_path = _resolve_cached_source_dir(item, default_cache)
+        catalog[cve_id] = (normalized, repo_path)
     return catalog
 
 
-def build_record_entry(cve_id: str, bench_meta: Dict[str, Any], dyn_record: Dict[str, Any], report: Dict[str, Any]) -> Dict[str, Any]:
+def build_record_entry(
+    cve_id: str,
+    bench_meta: Dict[str, Any],
+    dyn_record: Dict[str, Any],
+    report: Dict[str, Any],
+) -> Dict[str, Any]:
     ora = (dyn_record.get("artifacts") or {}).get("oracle_contract") or {}
+    tp_src = ((dyn_record.get("artifacts") or {}).get("tp_json") or {}).get("source_grounding") or {}
     proof = dyn_record.get("two_container_proof") or {}
     exp_run = proof.get("exploit_run") or {}
     noop_probe = proof.get("noop_probe") or {}
     return {
         "cve_id": cve_id,
-        "app": dyn_record.get("app"),
-        "version": bench_meta.get("sw_version") or ((dyn_record.get("artifacts") or {}).get("tp_json") or {}).get("source_grounding", {}).get("vulnerable_version"),
+        "app": dyn_record.get("app") or bench_meta.get("project"),
+        "version": bench_meta.get("sw_version") or tp_src.get("vulnerable_version"),
         "oracle_type": ora.get("oracle_type"),
         "effect_type": ora.get("effect_type"),
         "dynamic_status": dyn_record.get("status"),
@@ -82,10 +123,16 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="Optional SSH target for remote Docker execution, e.g. ddk@10.176.46.12",
     )
     ap.add_argument(
-        "--bench-input-dir",
+        "--benchmark-file",
         type=Path,
-        default=DEFAULT_BENCH_INPUT_DIR,
-        help="Directory containing CVE-*.json ground-truth patches and repo_path",
+        default=DEFAULT_BENCHMARK_FILE,
+        help="Benchmark JSON metadata file (default: ./experiment/benchmark_23.json)",
+    )
+    ap.add_argument(
+        "--source-cache-dir",
+        type=Path,
+        default=None,
+        help="Optional local directory holding unpacked target source repositories",
     )
     ap.add_argument(
         "--results-dir",
@@ -93,7 +140,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
         default=DEFAULT_RESULTS_DIR,
         help="Output directory for per-CVE evidence, verdicts, and summary reports",
     )
-    ap.add_argument("--cve", nargs="*", default=[], help="Specific CVE ID(s) to verify (default: all in bench-input-dir)")
+    ap.add_argument("--cve", nargs="*", default=[], help="Specific CVE ID(s) to verify (default: all 23 benchmark CVEs)")
     ap.add_argument("--concurrency", type=int, default=3, help="Parallel container stacks on Docker host")
     ap.add_argument("--reuse-dynamic", action="store_true", help="Reuse cached dynamic_run.json if present")
     ap.add_argument("--skip-dynamic", action="store_true", help="Collect deliverable code without starting containers")
@@ -113,7 +160,7 @@ def run_cli(argv: Optional[List[str]] = None) -> int:
     results_dir: Path = args.results_dir.resolve()
     results_dir.mkdir(parents=True, exist_ok=True)
 
-    catalog = load_benchmark_inputs(args.bench_input_dir)
+    catalog = load_benchmark_catalog(args.benchmark_file, args.source_cache_dir)
     if args.cve:
         target_cves = sorted(set(args.cve))
     elif catalog:
@@ -121,7 +168,6 @@ def run_cli(argv: Optional[List[str]] = None) -> int:
     else:
         target_cves = []
 
-    # Step 1: Collect or execute Two-Container Flag-Capture dynamic records
     dyn_map: Dict[str, Dict[str, Any]] = {}
     need_dynamic: List[str] = []
     for cve in target_cves:
@@ -149,7 +195,6 @@ def run_cli(argv: Optional[List[str]] = None) -> int:
         if not target_cves:
             target_cves = sorted(dyn_map.keys())
 
-    # Step 2: Run Agent Formal Auditor (lazy-init LLMClient only if needed)
     llm_client: Optional[LLMClient] = None
     all_records: List[Dict[str, Any]] = []
 
@@ -173,7 +218,6 @@ def run_cli(argv: Optional[List[str]] = None) -> int:
             all_records.append(build_record_entry(cve, bench_meta, dyn_rec, report))
             continue
 
-        # Initialize LLM client lazily so short-circuited items don't require API calls
         if llm_client is None and dyn_rec.get("status") not in (
             "MISSING_DELIVERABLE", "ENV_ERROR", "STATIC_VIOLATION", "LEAK_DETECTED", "NOOP_CONTAMINATED"
         ):
@@ -196,7 +240,6 @@ def run_cli(argv: Optional[List[str]] = None) -> int:
         print(f"[auditor] {cve}: verdict={report['verdict']} ({report['human_review_policy']})", flush=True)
         all_records.append(build_record_entry(cve, bench_meta, dyn_rec, report))
 
-    # Merge any other previously verified CVE subdirectories in results_dir so single --cve runs don't clobber SUMMARY.md
     seen_cves = {r["cve_id"] for r in all_records}
     for sub_vp in sorted(results_dir.glob("CVE-*/verdict_report.json")):
         other_cve = sub_vp.parent.name
@@ -211,7 +254,6 @@ def run_cli(argv: Optional[List[str]] = None) -> int:
         except Exception:
             continue
 
-    # Step 3: Aggregate summary & stratified human review queues
     summary = write_global_reports(
         results_dir=results_dir,
         records=all_records,

@@ -30,7 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
         default="verify",
         help="Pipeline stage to execute (default: verify)",
     )
-    ap.add_argument("--cve", nargs="*", default=[], help="Target CVE ID(s); omit to run full benchmark")
+    ap.add_argument("--cve", nargs="*", default=[], help="Target CVE ID(s); omit to run full 23-CVE benchmark")
     ap.add_argument("--ssh", type=str, default="", help="Optional SSH Docker host for verify stage (e.g. ddk@10.176.46.12)")
     ap.add_argument(
         "--deliverables-dir",
@@ -39,10 +39,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="Deliverables bundle directory (auto-resolved for local or --ssh if omitted)",
     )
     ap.add_argument(
-        "--bench-input-dir",
+        "--benchmark-file",
         type=Path,
-        default=REPO_ROOT / "bench_input",
-        help="Ground-truth CVE-*.json directory (default: ./bench_input)",
+        default=REPO_ROOT / "experiment" / "benchmark_23.json",
+        help="Benchmark metadata JSON file (default: ./experiment/benchmark_23.json)",
+    )
+    ap.add_argument(
+        "--source-cache-dir",
+        type=Path,
+        default=None,
+        help="Optional local unpacked target source cache directory",
     )
     ap.add_argument(
         "--verifier-results-dir",
@@ -129,13 +135,15 @@ def run_pipeline(argv: Optional[List[str]] = None) -> int:
 
         ver_argv: List[str] = [
             "--deliverables-dir", deliv,
-            "--bench-input-dir", str(args.bench_input_dir),
+            "--benchmark-file", str(args.benchmark_file),
             "--results-dir", str(args.verifier_results_dir),
             "--concurrency", str(args.concurrency),
             "--sample-rate", str(args.sample_rate),
             "--model", args.model or DEFAULT_MODEL,
             "--base-url", args.base_url or DEFAULT_BASE_URL,
         ]
+        if args.source_cache_dir is not None:
+            ver_argv.extend(["--source-cache-dir", str(args.source_cache_dir)])
         if args.ssh:
             ver_argv.extend(["--ssh", args.ssh])
         if args.cve:

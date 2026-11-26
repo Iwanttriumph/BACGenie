@@ -1394,7 +1394,7 @@ def main():
             sys.executable,
             str(BACGENIE_ROOT / "verify.py"),
             "--deliverables-dir", str(OUT_BUNDLE),
-            "--bench-input-dir", str(BACGENIE_ROOT / "bench_input"),
+            "--benchmark-file", str(BACGENIE_ROOT / "experiment" / "benchmark_23.json"),
             "--results-dir", str(BACGENIE_ROOT / "verifier_results"),
         ]
         if args.verify_ssh:

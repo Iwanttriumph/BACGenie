@@ -4,12 +4,10 @@ __pycache__/
 .env
 .env.*
 .opencode-runtime/
+bench_cache/
 runs/
 deliverables/
 verifier_results/
 experiment/runtime/
 experiment/logs/
-/project/
-experiments/
-/results - bench/
-/trigger pattern输出/
+experiment/results/

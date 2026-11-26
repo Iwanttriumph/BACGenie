@@ -94,14 +94,14 @@ def build_prompt(entry, index, timeout_min):
     src = source_dir(entry)
     app_port, db_port = ports_for(index)
     comp = "bacgenie_" + cve.lower().replace("-", "_")
-    input_json = ROOT / "bench_input" / f"{cve}.json"
+    bench_file = ROOT / "experiment" / "benchmark_23.json"
     lines = [
         f"目标漏洞：{cve}（{entry['project']} {entry['version']}，CWE: {', '.join(entry['cwe'])}）。",
         "请按 BACGenie 主审架构师规范完成全流程：源码锚定与 Oracle 契约、4090-1 隔离靶场与 Solution 2 前置状态、Clean-Room 盲态攻击脚本、双盲动态信标终审，并签发 reproduction_report.md。",
         "",
         "【本次实验硬约束】",
         "1) 禁止 websearch / webfetch（已禁用，调用会失败）；所有材料均已本地化。",
-        f"2) CVE 公告与官方补丁 diff：{input_json}（含 description / cwes / patches.content）。",
+        f"2) CVE 元数据与官方补丁索引：{bench_file}（当前任务描述：{entry.get('description', '')}；官方补丁提交：{', '.join(entry.get('patch_commits', []))}）。",
     ]
     if src and src.exists():
         lines.append(f"3) 目标版本源码缓存：{src}（直接复用，勿联网下载）。")

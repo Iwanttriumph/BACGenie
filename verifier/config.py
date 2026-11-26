@@ -7,7 +7,7 @@ ROOT_DIR = SRC_DIR.parent
 PROMPTS_DIR = SRC_DIR / "prompts"
 SCHEMAS_DIR = SRC_DIR / "schemas"
 
-# Default LLM configuration (aligned with BACGenie)
+# Default LLM configuration
 DEFAULT_MODEL = "deepseek-v4.1-flash"
 DEFAULT_BASE_URL = "https://opencode.ai/zen/go/v1"
 
@@ -15,7 +15,7 @@ DEFAULT_BASE_URL = "https://opencode.ai/zen/go/v1"
 DEFAULT_SSH_HOST = "ddk@10.176.46.12"
 DEFAULT_LOCAL_DELIVERABLES = ROOT_DIR / "deliverables" / "BACGenie"
 DEFAULT_REMOTE_DELIVERABLES = "/hdd1/congxy/AAPaper/NewIdea/BACGenie/deliverables/BACGenie"
-DEFAULT_BENCH_INPUT_DIR = ROOT_DIR / "bench_input"
+DEFAULT_BENCHMARK_FILE = ROOT_DIR / "experiment" / "benchmark_23.json"
 DEFAULT_RESULTS_DIR = ROOT_DIR / "verifier_results"
 
 # Source retrieval limits for the Agent Auditor

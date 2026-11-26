@@ -42,7 +42,6 @@ BACGenie/
 │   ├── toolbox/                 # 模型客户端与受限于 repo_path 的只读源码检索工具
 │   ├── prompts/ & schemas/      # 四阶段 Oracle 抽取提示词与三值裁决 JSON Schema
 │   └── reporting/               # True 分层随机抽样、unknown 100% 必审清单与 SUMMARY.md 生成器
-├── bench_input/                 # 23 条基准 CVE 描述、补丁 diff 与源码路径定义
 └── tests/                       # 自动化 Verifier 与流水线单元测试
 ```
 

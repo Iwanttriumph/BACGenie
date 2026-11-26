@@ -321,6 +321,13 @@ class TestUnifiedPipelineCLI(unittest.TestCase):
         self.assertEqual(args.cve, ["CVE-2024-11300"])
         self.assertEqual(args.ssh, "ddk@10.176.46.12")
 
+    def test_load_benchmark_23_catalog(self) -> None:
+        from verifier.config import DEFAULT_BENCHMARK_FILE
+        from verifier.main import load_benchmark_catalog
+        cat = load_benchmark_catalog(DEFAULT_BENCHMARK_FILE)
+        self.assertEqual(len(cat), 23)
+        self.assertIn("CVE-2024-10273", cat)
+
 
 if __name__ == "__main__":
     unittest.main()
